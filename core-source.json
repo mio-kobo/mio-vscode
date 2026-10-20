@@ -1,5 +1,4 @@
 {
-  "repository": "https://github.com/ExMikuPro/Mio.git",
-  "targetRepository": "https://github.com/mio-kobo/mio.git",
+  "repository": "https://github.com/mio-kobo/mio.git",
   "commit": "29746a65692c73d637510cbc3f4463e68a49d05c"
 }

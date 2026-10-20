@@ -20,6 +20,7 @@ if (!fs.existsSync(repoRoot)) {
   run('git', ['init', repoRoot]);
   run('git', ['remote', 'add', 'origin', pin.repository], repoRoot);
 }
+run('git', ['remote', 'set-url', 'origin', pin.repository], repoRoot);
 const head = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot, encoding: 'utf8' });
 if (head.status !== 0 || head.stdout.trim() !== pin.commit) {
   run('git', ['fetch', '--depth=1', '--no-tags', 'origin', pin.commit], repoRoot);
