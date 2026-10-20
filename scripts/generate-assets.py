@@ -16,15 +16,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parents[1]
-PLUGIN_ICON = (
-    ROOT.parent
-    / "jetbrains"
-    / "src"
-    / "main"
-    / "resources"
-    / "META-INF"
-    / "pluginIcon.svg"
-)
+PLUGIN_ICON = ROOT / 'assets' / 'pluginIcon-source.svg'
 ASSETS = ROOT / "assets"
 IMAGES = ROOT / "docs" / "images"
 ASSETS.mkdir(parents=True, exist_ok=True)

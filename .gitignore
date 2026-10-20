@@ -5,3 +5,5 @@ out/
 *.vsix
 *.log
 .DS_Store
+
+.mio-core/

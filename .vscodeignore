@@ -20,3 +20,9 @@ package-lock.json
 .vscodeignore
 test-fixtures/**
 scripts/**
+
+.mio-core/**
+.github/**
+MIGRATION.md
+core-source.json
+assets/pluginIcon-source.svg

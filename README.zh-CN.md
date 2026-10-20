@@ -7,9 +7,9 @@
 <p align="center"><strong>Mio 编程语言的 Visual Studio Code 支持</strong></p>
 
 <p align="center">
-  <a href="https://github.com/ExMikuPro/Mio">Mio 项目</a> ·
-  <a href="https://github.com/ExMikuPro/Mio/blob/main/docs/LANGUAGE.md">语言文档</a> ·
-  <a href="https://github.com/ExMikuPro/Mio/releases">Releases</a>
+  <a href="https://github.com/mio-kobo/mio">Mio 项目</a> ·
+  <a href="https://github.com/mio-kobo/mio/blob/main/docs/LANGUAGE.md">语言文档</a> ·
+  <a href="https://github.com/mio-kobo/mio/releases">Releases</a>
 </p>
 
 Mio 是一门静态强类型编程语言，使用日语罗马音关键字，以 Mochi 字节码为执行目标，
@@ -77,7 +77,8 @@ code --install-extension mio-language-support-0.3.0.vsix
 ### 从源码构建
 
 ```bash
-cd editors/vscode
+git clone https://github.com/mio-kobo/mio-vscode.git
+cd mio-vscode
 npm ci
 npm run compile
 npx vsce package
@@ -203,21 +204,26 @@ npm run check:vsix
 执行器），再通过 `@vscode/test-electron` 启动 Extension Host，验证激活、语言识别、
 命令注册、代码片段、折叠、真实诊断、缺失 CLI，以及带空格/中文/日文的路径。
 
-`pretest` 会在 Go 可用时构建 `cmd/mio` 到 `editors/vscode/.test-tmp/`。如果没有 Go，
+`pretest` 会在 Go 可用时构建 `cmd/mio` 到 `.test-tmp/`。如果没有 Go，
 依赖真实 CLI 的集成测试会明确跳过；插件本身不依赖 Go。
 
 ## 许可与素材
 
 插件代码采用 MIT License，见 [LICENSE](LICENSE)。图标由 JetBrains Marketplace
-图标（`editors/jetbrains/src/main/resources/META-INF/pluginIcon.svg`）内嵌的 PNG
+图标（`assets/pluginIcon-source.svg`）内嵌的 PNG
 等比例转换为 128×128 RGBA，未重新设计，也不是文件类型图标 `icons/mio.svg`。
 `assets/mascot/` 下的其他 Mio / Mochi 角色插画**未**打包进本插件，因为其授权与
 MIT 代码许可分开管理，详见 [NOTICE.md](NOTICE.md)。
 
 ## 相关链接
 
-- [Mio 仓库](https://github.com/ExMikuPro/Mio)
-- [Mio 语言文档](https://github.com/ExMikuPro/Mio/blob/main/docs/LANGUAGE.md)
-- [Bunko 标准库](https://github.com/ExMikuPro/Mio/blob/main/docs/BUNKO.md)
-- [JetBrains Mio — Programming Language Tools](https://github.com/ExMikuPro/Mio/tree/main/editors/jetbrains)
-- [Issue Tracker](https://github.com/ExMikuPro/Mio/issues)
+- [Mio 仓库](https://github.com/mio-kobo/mio)
+- [Mio 语言文档](https://github.com/mio-kobo/mio/blob/main/docs/LANGUAGE.md)
+- [Bunko 标准库](https://github.com/mio-kobo/mio/blob/main/docs/BUNKO.md)
+- [JetBrains Mio — Programming Language Tools](https://github.com/mio-kobo/mio-jetbrains)
+- [Issue Tracker](https://github.com/mio-kobo/mio/issues)
+
+
+## 独立仓库开发与发布
+
+见 [MIGRATION.md](MIGRATION.md)。测试需要真实 CLI，不允许因缺少 Go 跳过 LSP 测试。VS Code 测试 CLI 来自 core-source.json 固定 SHA 的独立临时克隆，构建失败即测试失败。核心仓库的目标地址依赖 Transfer 完成；现有 Marketplace 版本与用户设置保持不变。

@@ -1,0 +1,58 @@
+name: VS Code Plugin CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vscode-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  vscode:
+    name: VS Code Extension
+    strategy:
+      matrix:
+        os: [ubuntu-24.04, macos-15, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.9'
+          cache: false
+      - name: Install dependencies
+        run: npm ci
+      - name: Compile TypeScript
+        run: npm run compile
+      - name: ESLint
+        run: npm run lint
+      - name: Unit and VS Code integration tests
+        shell: bash
+        env:
+          MIO_RELEASE_TESTS: '1'
+        run: |
+          if [ "$RUNNER_OS" = Linux ]; then xvfb-run -a npm test; else npm test; fi
+      - name: Package VSIX
+        run: npm run package
+      - name: Verify VSIX content
+        run: npm run check:vsix
+      - name: Upload VSIX
+        uses: actions/upload-artifact@v4
+        with:
+          name: mio-vscode-vsix-${{ matrix.os }}
+          path: '*.vsix'
+          if-no-files-found: error
+          retention-days: 7

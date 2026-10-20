@@ -69,7 +69,7 @@ export class MioCliService implements vscode.Disposable {
         );
       } else if (choice === 'Installation Guide') {
         await vscode.env.openExternal(
-          vscode.Uri.parse('https://github.com/ExMikuPro/Mio#quick-start'),
+          vscode.Uri.parse('https://github.com/mio-kobo/mio#quick-start'),
         );
       }
     })();

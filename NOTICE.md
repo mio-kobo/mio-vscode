@@ -11,7 +11,7 @@ otherwise.
 
 `icon.png` is a 128×128 RGBA raster conversion of the JetBrains Marketplace icon
 stored at
-`editors/jetbrains/src/main/resources/META-INF/pluginIcon.svg` in the parent
+`assets/pluginIcon-source.svg` in the parent
 repository. It uses the PNG artwork embedded in that SVG without redrawing or
 replacing it, and preserves the original transparent background, colors,
 proportions, and 5% margin. `assets/mio.svg` is the separate Mio language mark
@@ -46,3 +46,8 @@ included in the packaged VSIX:
 The generated preview images under `docs/images/` are documentation assets
 created by `scripts/generate-assets.py`. They use the scope colors of the
 extension and do not contain third-party artwork.
+
+
+## 独立仓库开发与发布
+
+见 [MIGRATION.md](MIGRATION.md)。测试需要真实 CLI，不允许因缺少 Go 跳过 LSP 测试。VS Code 测试 CLI 来自 core-source.json 固定 SHA 的独立临时克隆，构建失败即测试失败。核心仓库的目标地址依赖 Transfer 完成；现有 Marketplace 版本与用户设置保持不变。

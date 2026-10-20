@@ -65,7 +65,7 @@ async function main(): Promise<void> {
       MIO_RELEASE_TESTS: process.env.MIO_RELEASE_TESTS ?? '',
       MIO_TEST_CLI: cliPath,
       MIO_TEST_PLUGIN_ROOT: extensionDevelopmentPath,
-      MIO_TEST_REPO_ROOT: path.resolve(extensionDevelopmentPath, '..', '..'),
+      MIO_TEST_REPO_ROOT: path.resolve(extensionDevelopmentPath, '.mio-core'),
     },
   };
 

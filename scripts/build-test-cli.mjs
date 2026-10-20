@@ -3,82 +3,28 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const here = path.dirname(fileURLToPath(import.meta.url));
-const pluginRoot = path.resolve(here, '..');
-const repoRoot = path.resolve(pluginRoot, '..', '..');
+const pluginRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const pin = JSON.parse(fs.readFileSync(path.join(pluginRoot, 'core-source.json'), 'utf8'));
+const repoRoot = path.join(pluginRoot, '.mio-core');
 const outputDirectory = path.join(pluginRoot, '.test-tmp');
-const executableName = process.platform === 'win32' ? 'mio.exe' : 'mio';
-const outputPath = path.join(outputDirectory, executableName);
-const markerPath = path.join(outputDirectory, 'NO_CLI');
-
+const outputPath = path.join(outputDirectory, process.platform === 'win32' ? 'mio.exe' : 'mio');
+function run(command, args, cwd = pluginRoot) {
+  const result = spawnSync(command, args, { cwd, stdio: 'inherit', shell: false });
+  if (result.error) throw result.error;
+  if (result.status !== 0) throw new Error(`${command} exited ${result.status}`);
+}
+if (!/^[a-f0-9]{40}$/u.test(pin.commit)) throw new Error('Core commit must be a full immutable SHA');
 fs.mkdirSync(outputDirectory, { recursive: true });
-fs.rmSync(markerPath, { force: true });
-
-function findGo() {
-  const candidates = [
-    process.env.GO,
-    'go',
-    '/usr/local/go/bin/go',
-    '/opt/homebrew/bin/go',
-    'C:\\Program Files\\Go\\bin\\go.exe',
-  ].filter((candidate) => typeof candidate === 'string' && candidate !== '');
-
-  for (const candidate of candidates) {
-    const probe = spawnSync(candidate, ['version'], {
-      stdio: 'ignore',
-      shell: false,
-    });
-    if (probe.status === 0) {
-      return candidate;
-    }
-  }
-  return undefined;
+fs.rmSync(path.join(outputDirectory, 'NO_CLI'), { force: true });
+if (!fs.existsSync(repoRoot)) {
+  run('git', ['init', repoRoot]);
+  run('git', ['remote', 'add', 'origin', pin.repository], repoRoot);
 }
-
-const go = findGo();
-if (go === undefined) {
-  fs.writeFileSync(
-    markerPath,
-    'Go was not found; real-CLI integration tests will be skipped.\n',
-    'utf8',
-  );
-  console.warn(
-    '[build-test-cli] go was not found; real-CLI integration tests will be skipped.',
-  );
-  process.exit(0);
+const head = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot, encoding: 'utf8' });
+if (head.status !== 0 || head.stdout.trim() !== pin.commit) {
+  run('git', ['fetch', '--depth=1', '--no-tags', 'origin', pin.commit], repoRoot);
+  // This is a disposable test-only checkout, never the developer's core workspace.
+  run('git', ['checkout', '--detach', pin.commit], repoRoot);
 }
-
-console.log(`[build-test-cli] building ${outputPath}`);
-const build = spawnSync(
-  go,
-  ['build', '-o', outputPath, './cmd/mio'],
-  {
-    cwd: repoRoot,
-    stdio: 'inherit',
-    shell: false,
-    env: process.env,
-  },
-);
-
-if (build.error !== undefined) {
-  console.error(`[build-test-cli] ${build.error.message}`);
-  process.exit(1);
-}
-if (build.status !== 0) {
-  console.error(
-    `[build-test-cli] go build exited with code ${build.status ?? 'unknown'}`,
-  );
-  process.exit(build.status ?? 1);
-}
-
-const version = spawnSync(outputPath, ['version'], {
-  encoding: 'utf8',
-  shell: false,
-});
-if (version.status !== 0) {
-  console.error(
-    `[build-test-cli] built CLI failed to run: ${version.stderr ?? ''}`,
-  );
-  process.exit(1);
-}
-console.log(`[build-test-cli] ${version.stdout.trim()}`);
+run(process.env.GO || 'go', ['build', '-o', outputPath, './cmd/mio'], repoRoot);
+run(outputPath, ['version']);

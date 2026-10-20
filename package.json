@@ -23,13 +23,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/ExMikuPro/Mio.git",
-    "directory": "editors/vscode"
+    "url": "https://github.com/mio-kobo/mio-vscode.git"
   },
   "bugs": {
-    "url": "https://github.com/ExMikuPro/Mio/issues"
+    "url": "https://github.com/mio-kobo/mio-vscode/issues"
   },
-  "homepage": "https://github.com/ExMikuPro/Mio",
+  "homepage": "https://github.com/mio-kobo/mio-vscode",
   "icon": "icon.png",
   "main": "./out/extension.js",
   "activationEvents": [

@@ -123,7 +123,7 @@ suite('extension manifest', () => {
     assert.ok(manifest.keywords?.includes('mio'));
     assert.match(
       manifest.repository?.url ?? '',
-      /github\.com\/ExMikuPro\/Mio/u,
+      /github\.com\/mio-kobo\/mio/u,
     );
   });
 
@@ -448,7 +448,7 @@ suite('extension manifest', () => {
     const chinese = readText('README.zh-CN.md');
     for (const readme of [english, chinese]) {
       assert.match(readme, /Mio — Programming Language Tools/u);
-      assert.match(readme, /github\.com\/ExMikuPro\/Mio/u);
+      assert.match(readme, /github\.com\/mio-kobo\/mio/u);
     }
     assert.match(english, /Known limitations/u);
     assert.match(chinese, /已知限制/u);

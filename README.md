@@ -7,9 +7,9 @@
 <p align="center"><strong>Visual Studio Code support for the Mio programming language</strong></p>
 
 <p align="center">
-  <a href="https://github.com/ExMikuPro/Mio">Mio project</a> ·
-  <a href="https://github.com/ExMikuPro/Mio/blob/main/docs/LANGUAGE.md">Language reference</a> ·
-  <a href="https://github.com/ExMikuPro/Mio/releases">Releases</a>
+  <a href="https://github.com/mio-kobo/mio">Mio project</a> ·
+  <a href="https://github.com/mio-kobo/mio/blob/main/docs/LANGUAGE.md">Language reference</a> ·
+  <a href="https://github.com/mio-kobo/mio/releases">Releases</a>
 </p>
 
 Mio is a statically typed programming language with Japanese romaji keywords,
@@ -100,7 +100,8 @@ Then reload VS Code and open any `.mio` file.
 ### From source
 
 ```bash
-cd editors/vscode
+git clone https://github.com/mio-kobo/mio-vscode.git
+cd mio-vscode
 npm ci
 npm run compile
 npx vsce package
@@ -253,7 +254,7 @@ for activation, language ID, command registration, snippets, folding,
 language-server diagnostics, CLI fallback, missing-CLI, and
 space/Chinese/Japanese path tests.
 
-The `pretest` step builds `cmd/mio` into `editors/vscode/.test-tmp/` when Go is
+The `pretest` step builds `cmd/mio` into `.test-tmp/` when Go is
 available. If Go is not installed, real-CLI integration tests are skipped with
 an explicit marker; the extension itself has no Go dependency.
 
@@ -261,7 +262,7 @@ an explicit marker; the extension itself has no Go dependency.
 
 The plugin code is MIT-licensed; see [LICENSE](LICENSE). The icon is a 128×128
 RGBA conversion of the JetBrains Marketplace icon
-`editors/jetbrains/src/main/resources/META-INF/pluginIcon.svg` (using its
+`assets/pluginIcon-source.svg` (using its
 embedded PNG artwork), not the `icons/mio.svg` file-type mark. Other Mio/Mochi
 character illustrations under `assets/mascot/` are **not** bundled because
 their license is separate from the MIT-licensed code. See
@@ -269,8 +270,13 @@ their license is separate from the MIT-licensed code. See
 
 ## Links
 
-- [Mio repository](https://github.com/ExMikuPro/Mio)
-- [Mio language reference](https://github.com/ExMikuPro/Mio/blob/main/docs/LANGUAGE.md)
-- [Bunko standard library](https://github.com/ExMikuPro/Mio/blob/main/docs/BUNKO.md)
-- [JetBrains Mio — Programming Language Tools](https://github.com/ExMikuPro/Mio/tree/main/editors/jetbrains)
-- [Issue tracker](https://github.com/ExMikuPro/Mio/issues)
+- [Mio repository](https://github.com/mio-kobo/mio)
+- [Mio language reference](https://github.com/mio-kobo/mio/blob/main/docs/LANGUAGE.md)
+- [Bunko standard library](https://github.com/mio-kobo/mio/blob/main/docs/BUNKO.md)
+- [JetBrains Mio — Programming Language Tools](https://github.com/mio-kobo/mio-jetbrains)
+- [Issue tracker](https://github.com/mio-kobo/mio/issues)
+
+
+## 独立仓库开发与发布
+
+见 [MIGRATION.md](MIGRATION.md)。测试需要真实 CLI，不允许因缺少 Go 跳过 LSP 测试。VS Code 测试 CLI 来自 core-source.json 固定 SHA 的独立临时克隆，构建失败即测试失败。核心仓库的目标地址依赖 Transfer 完成；现有 Marketplace 版本与用户设置保持不变。
