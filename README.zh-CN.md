@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="https://github.com/mio-kobo/mio">Mio 项目</a> ·
-  <a href="https://github.com/mio-kobo/mio/blob/main/docs/LANGUAGE.md">语言文档</a> ·
+  <a href="https://github.com/mio-kobo/mio/blob/Mio-2/docs/LANGUAGE.md">语言文档</a> ·
   <a href="https://github.com/mio-kobo/mio/releases">Releases</a>
 </p>
 
@@ -85,8 +85,8 @@ npx vsce package
 code --install-extension mio-language-support-0.3.0.vsix
 ```
 
-插件尚未发布到 Visual Studio Marketplace。`publisher` 字段是项目 GitHub 组织名
-对应的占位值，发布前请阅读 [PUBLISHING.md](PUBLISHING.md)。
+Marketplace 身份固定为 `exmikupro.mio-language-support`，迁移不得修改 publisher 或插件名称。
+迁移期间真实发布关闭，独立发布流程见 [PUBLISHING.md](PUBLISHING.md)。
 
 ## 支持平台
 
@@ -187,7 +187,7 @@ JetBrains 插件一样，将当前目录的 `.mio` 文件复制到临时包并�
 - 没有源码位置的导入/包错误会显示在当前文件开头，并在消息中包含 CLI 报告的文件路径。
 - Windows 上不执行 `.cmd` / `.bat` 启动器；请配置原生 `mio.exe`，以保持无 shell 执行。
 - `mio.outputDirectory` 只影响 `mio build`；`mio run` 始终运行源文件。
-- Marketplace Publisher ID 尚未最终确定，见 [PUBLISHING.md](PUBLISHING.md)。
+- Marketplace 身份保持不变，真实发布须先完成独立仓库的 OIDC 与审核保护配置。
 
 ## 开发与测试
 
@@ -204,8 +204,8 @@ npm run check:vsix
 执行器），再通过 `@vscode/test-electron` 启动 Extension Host，验证激活、语言识别、
 命令注册、代码片段、折叠、真实诊断、缺失 CLI，以及带空格/中文/日文的路径。
 
-`pretest` 会在 Go 可用时构建 `cmd/mio` 到 `.test-tmp/`。如果没有 Go，
-依赖真实 CLI 的集成测试会明确跳过；插件本身不依赖 Go。
+`pretest` 从 `core-source.json` 固定的核心 SHA 构建 `cmd/mio` 到 `.test-tmp/`。
+测试需要 Git 与 Go；缺少工具或构建失败会使测试失败，不跳过真实 LSP 验证。安装后的插件本身不依赖 Go。
 
 ## 许可与素材
 
@@ -218,8 +218,8 @@ MIT 代码许可分开管理，详见 [NOTICE.md](NOTICE.md)。
 ## 相关链接
 
 - [Mio 仓库](https://github.com/mio-kobo/mio)
-- [Mio 语言文档](https://github.com/mio-kobo/mio/blob/main/docs/LANGUAGE.md)
-- [Bunko 标准库](https://github.com/mio-kobo/mio/blob/main/docs/BUNKO.md)
+- [Mio 语言文档](https://github.com/mio-kobo/mio/blob/Mio-2/docs/LANGUAGE.md)
+- [Bunko 标准库](https://github.com/mio-kobo/mio/blob/Mio-2/docs/BUNKO.md)
 - [JetBrains Mio — Programming Language Tools](https://github.com/mio-kobo/mio-jetbrains)
 - [Issue Tracker](https://github.com/mio-kobo/mio/issues)
 

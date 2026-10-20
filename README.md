@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="https://github.com/mio-kobo/mio">Mio project</a> ·
-  <a href="https://github.com/mio-kobo/mio/blob/main/docs/LANGUAGE.md">Language reference</a> ·
+  <a href="https://github.com/mio-kobo/mio/blob/Mio-2/docs/LANGUAGE.md">Language reference</a> ·
   <a href="https://github.com/mio-kobo/mio/releases">Releases</a>
 </p>
 
@@ -108,9 +108,9 @@ npx vsce package
 code --install-extension mio-language-support-0.3.0.vsix
 ```
 
-The extension is not published to the Visual Studio Marketplace yet. The
-`publisher` field is a placeholder derived from the project's GitHub
-organization; see [PUBLISHING.md](PUBLISHING.md) before publishing.
+The retained Marketplace identity is `exmikupro.mio-language-support`.
+Keep its publisher and extension name unchanged. Publishing is disabled during
+migration; see [PUBLISHING.md](PUBLISHING.md) for the independent release workflow.
 
 ## Supported platforms
 
@@ -254,9 +254,10 @@ for activation, language ID, command registration, snippets, folding,
 language-server diagnostics, CLI fallback, missing-CLI, and
 space/Chinese/Japanese path tests.
 
-The `pretest` step builds `cmd/mio` into `.test-tmp/` when Go is
-available. If Go is not installed, real-CLI integration tests are skipped with
-an explicit marker; the extension itself has no Go dependency.
+The `pretest` step builds `cmd/mio` from the fixed core SHA in
+`core-source.json` into `.test-tmp/`. Git and Go are required for tests:
+a missing tool or failed build fails the tests. The installed extension itself
+has no Go dependency.
 
 ## License and artwork
 
@@ -271,8 +272,8 @@ their license is separate from the MIT-licensed code. See
 ## Links
 
 - [Mio repository](https://github.com/mio-kobo/mio)
-- [Mio language reference](https://github.com/mio-kobo/mio/blob/main/docs/LANGUAGE.md)
-- [Bunko standard library](https://github.com/mio-kobo/mio/blob/main/docs/BUNKO.md)
+- [Mio language reference](https://github.com/mio-kobo/mio/blob/Mio-2/docs/LANGUAGE.md)
+- [Bunko standard library](https://github.com/mio-kobo/mio/blob/Mio-2/docs/BUNKO.md)
 - [JetBrains Mio — Programming Language Tools](https://github.com/mio-kobo/mio-jetbrains)
 - [Issue tracker](https://github.com/mio-kobo/mio/issues)
 
