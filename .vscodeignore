@@ -26,3 +26,5 @@ scripts/**
 MIGRATION.md
 core-source.json
 assets/pluginIcon-source.svg
+
+*.vsix.sha256
