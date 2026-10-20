@@ -171,33 +171,23 @@ suite('Mio extension host', () => {
       content: '',
     });
     await vscode.window.showTextDocument(document, { preview: false });
-    const list = await vscode.commands.executeCommand<vscode.CompletionList>(
-      'vscode.executeCompletionItemProvider',
-      document.uri,
-      new vscode.Position(0, 0),
-    );
-    const labels = new Set(
-      (list?.items ?? []).map((item) =>
+    const expectedPrefixes = [
+      'kaku', 'kaku-typed', 'waza', 'moshi', 'moshi-sore', 'aida',
+      'kaesu', 'yobu', 'kata', 'sentaku', 'awase', 'array', 'map',
+    ];
+    // A clean Extension Host loads contributed snippets asynchronously.
+    // Wait for registration instead of asserting against its first partial result.
+    await waitFor('all Mio snippet contributions', async () => {
+      const list = await vscode.commands.executeCommand<vscode.CompletionList>(
+        'vscode.executeCompletionItemProvider',
+        document.uri,
+        new vscode.Position(0, 0),
+      );
+      const labels = new Set((list?.items ?? []).map((item) =>
         typeof item.label === 'string' ? item.label : item.label.label,
-      ),
-    );
-    for (const prefix of [
-      'kaku',
-      'kaku-typed',
-      'waza',
-      'moshi',
-      'moshi-sore',
-      'aida',
-      'kaesu',
-      'yobu',
-      'kata',
-      'sentaku',
-      'awase',
-      'array',
-      'map',
-    ]) {
-      assert.ok(labels.has(prefix), `missing snippet prefix: ${prefix}`);
-    }
+      ));
+      return expectedPrefixes.every((prefix) => labels.has(prefix)) || undefined;
+    });
   });
 
   test('provides syntax-based folding ranges', async () => {
