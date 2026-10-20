@@ -84,7 +84,7 @@ suite('process runner', () => {
       'Mio CLI 中文 日本語',
     );
     fs.mkdirSync(directory, { recursive: true });
-    const linked = path.join(directory, 'node');
+    const linked = path.join(directory, path.basename(process.execPath));
     try {
       fs.symlinkSync(process.execPath, linked);
     } catch {
