@@ -14,7 +14,9 @@ interface PackageManifest {
   repository?: { url?: string; directory?: string };
   license?: string;
   icon?: string;
+  extensionDependencies?: string[];
   contributes?: {
+    configurationDefaults?: Record<string, unknown>;
     languages?: Array<{
       id?: string;
       extensions?: string[];
@@ -185,6 +187,23 @@ suite('extension manifest', () => {
       true,
     );
     assert.equal('mio.languageVersion' in properties, false);
+  });
+
+  test('disables cSpell only for Mio through overridable configuration defaults', () => {
+    assert.deepEqual(manifest.contributes?.configurationDefaults, {
+      'cSpell.enabledFileTypes': { mio: false },
+    });
+    assert.equal(
+      'cSpell.enabledFileTypes' in
+        (manifest.contributes?.configuration?.properties ?? {}),
+      false,
+      'cSpell owns the setting; Mio should only contribute its default',
+    );
+    assert.equal(
+      manifest.extensionDependencies?.includes('streetsidesoftware.code-spell-checker') ?? false,
+      false,
+      'Code Spell Checker must remain optional',
+    );
   });
 
   test('resolves every NLS placeholder in both locale files', () => {

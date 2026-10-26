@@ -118,6 +118,25 @@ go build -o mio ./cmd/mio
 插件**不提供** `mio.languageVersion`：当前 Mio CLI 没有语言版本参数。语法高亮和
 代码片段以当前工具链使用的 V0.5 关键字集为准，版本差异见下表。
 
+### 拼写检查
+
+安装 Code Spell Checker（cSpell）时，本扩展默认将
+`cSpell.enabledFileTypes.mio` 设为 `false`，避免 `.mio` 文件中的 `waza`、
+`kaku`、`moshi` 等关键字产生 `Unknown word` 拼写误报。其他文件类型的拼写检查，
+以及 MioCore LSP 的语法检查、类型检查、诊断、Hover、自动补全和跳转定义均不受影响。
+cSpell 为可选扩展；本扩展不会写入用户设置，已有的用户或工作区显式配置优先。
+
+如需重新启用 Mio 文件的拼写检查，在用户或工作区 `settings.json` 中添加以下配置
+（若已有 `cSpell.enabledFileTypes` 对象，请将 `mio` 合并到其中）：
+
+```json
+{
+  "cSpell.enabledFileTypes": {
+    "mio": true
+  }
+}
+```
+
 ### Bunko 标准库
 
 当文件使用 `yobu "kiso/..."` 时，`mio check` 与 `mio run` 需要 Bunko 根目录。

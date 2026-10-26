@@ -145,6 +145,26 @@ configured path or `PATH`.
 no language-version flag. The grammar and snippets target the V0.5 keyword set
 used by the current toolchain. See the version table below.
 
+### Spell checking
+
+When Code Spell Checker (cSpell) is installed, this extension defaults
+`cSpell.enabledFileTypes.mio` to `false` so Mio keywords such as `waza`, `kaku`,
+and `moshi` do not produce `Unknown word` diagnostics in `.mio` files. This
+leaves other file types and all MioCore LSP features (syntax/type diagnostics,
+Hover, completion, and go to definition) unaffected. cSpell is optional; no
+user settings are written, and explicit user or workspace settings take precedence.
+
+To re-enable spell checking for Mio, add this to your user or workspace `settings.json`
+(merge `mio` into any existing `cSpell.enabledFileTypes` object):
+
+```json
+{
+  "cSpell.enabledFileTypes": {
+    "mio": true
+  }
+}
+```
+
 ### Bunko standard library
 
 `mio check` and `mio run` need the Bunko root when a file imports `kiso/...`.

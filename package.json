@@ -40,6 +40,11 @@
     "onCommand:mio.openOutput"
   ],
   "contributes": {
+    "configurationDefaults": {
+      "cSpell.enabledFileTypes": {
+        "mio": false
+      }
+    },
     "languages": [
       {
         "id": "mio",
