@@ -2,6 +2,11 @@ import * as vscode from 'vscode';
 import { MioCliService } from './cli/cliService';
 import { ProcessRunner } from './cli/processRunner';
 import { MioCommands } from './commands/commands';
+import {
+  MioGraphCommands,
+  type GenerateGraphOptions,
+  type MioGraphGenerationOutcome,
+} from './commands/graphCommands';
 import { MioDiagnosticManager } from './diagnostics/diagnosticManager';
 import { MioFoldingRangeProvider } from './editor/foldingProvider';
 import {
@@ -22,6 +27,11 @@ export interface MioExtensionApi {
   clearDiagnostics(uri: vscode.Uri): void;
   getLanguageServerState(): MioLanguageServerState;
   getDiagnosticsOwner(): MioDiagnosticsOwner;
+  // 未来的蓝图编辑器（Webview / React Flow）可以直接调用该入口。
+  generateMioGraphSource(
+    uri: vscode.Uri,
+    options?: GenerateGraphOptions,
+  ): Promise<MioGraphGenerationOutcome>;
   dispose(): void;
 }
 
@@ -37,6 +47,7 @@ export async function activate(
   const cli = new MioCliService();
   const diagnostics = new MioDiagnosticManager({ output, runner, cli });
   const commands = new MioCommands({ output, runner, cli, diagnostics });
+  const graphCommands = new MioGraphCommands({ output, runner, cli });
   const languageClient = new MioLanguageClient({ output, cli });
 
   // server 就绪时由它独占诊断；其余状态（禁用、失败、停止）回到 CLI 回退。
@@ -88,6 +99,10 @@ export async function activate(
     vscode.commands.registerCommand('mio.openOutput', () =>
       commands.openOutput(),
     ),
+    vscode.commands.registerCommand(
+      'mioGraph.generateSource',
+      guard(() => graphCommands.generateFromActiveEditor()),
+    ),
   ];
 
   const folding = vscode.languages.registerFoldingRangeProvider(
@@ -135,6 +150,7 @@ export async function activate(
         command.dispose();
       }
       languageClient.dispose();
+      graphCommands.dispose();
       diagnostics.dispose();
       cli.dispose();
       runner.dispose();
@@ -150,6 +166,8 @@ export async function activate(
     clearDiagnostics: (uri) => diagnostics.clearDocument(uri),
     getLanguageServerState: () => languageClient.state,
     getDiagnosticsOwner: () => diagnostics.diagnosticsOwner,
+    generateMioGraphSource: (uri, options) =>
+      graphCommands.generateFromUri(uri, options),
     dispose: () => disposable.dispose(),
   };
 

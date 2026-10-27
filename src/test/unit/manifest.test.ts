@@ -129,6 +129,14 @@ suite('extension manifest', () => {
     );
   });
 
+  test('contributes the .miog graph language', () => {
+    const language = manifest.contributes?.languages?.find(
+      (entry) => entry.id === 'mio-graph',
+    );
+    assert.ok(language);
+    assert.deepEqual(language?.extensions, ['.miog']);
+  });
+
   test('contributes the Mio language, grammar, and snippets', () => {
     const language = manifest.contributes?.languages?.find(
       (entry) => entry.id === 'mio',
@@ -158,7 +166,7 @@ suite('extension manifest', () => {
     assert.ok(fs.existsSync(path.join(pluginRoot, snippetEntry?.path ?? '')));
   });
 
-  test('contributes exactly the five requested commands', () => {
+  test('contributes the Mio commands and the Mio Graph command', () => {
     const commands = new Set(
       (manifest.contributes?.commands ?? []).map((entry) => entry.command),
     );
@@ -168,6 +176,7 @@ suite('extension manifest', () => {
       'mio.openOutput',
       'mio.runCurrentFile',
       'mio.showCompilerVersion',
+      'mioGraph.generateSource',
     ]);
   });
 

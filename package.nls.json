@@ -9,5 +9,6 @@
   "mio.command.build.title": "Build Current File",
   "mio.command.version.title": "Show Compiler Version",
   "mio.command.output.title": "Open Output",
-  "mio.configuration.languageServer.enabled.description": "Start the MioCore language server from the Mio CLI (mio lsp). When it is unavailable, diagnostics fall back to mio check."
+  "mio.configuration.languageServer.enabled.description": "Start the MioCore language server from the Mio CLI (mio lsp). When it is unavailable, diagnostics fall back to mio check.",
+  "mio.command.graph.generate.title": "Generate Mio Source"
 }

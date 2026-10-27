@@ -1,0 +1,59 @@
+{
+  "formatVersion": 1,
+  "id": "square",
+  "version": 1,
+  "kind": "function",
+  "metadata": {
+    "name": "Square",
+    "description": "函数图示例：Entry 声明 waza square(value: int64) -> int64，Return 返回值。",
+    "variables": [],
+    "imports": [],
+    "functions": []
+  },
+  "nodes": [
+    {
+      "id": "entry",
+      "type": "Entry",
+      "position": { "x": 0, "y": 0 },
+      "params": {
+        "name": "square",
+        "returnType": "int64",
+        "parameters": [{ "name": "value", "type": "int64" }]
+      }
+    },
+    {
+      "id": "mul",
+      "type": "Multiply",
+      "position": { "x": 320, "y": 120 },
+      "params": {}
+    },
+    {
+      "id": "return",
+      "type": "Return",
+      "position": { "x": 640, "y": 0 },
+      "params": {}
+    }
+  ],
+  "connections": [
+    {
+      "id": "c_entry_return",
+      "from": { "nodeId": "entry", "pinId": "entry.exec_out" },
+      "to": { "nodeId": "return", "pinId": "return.exec_in" }
+    },
+    {
+      "id": "c_entry_mul_a",
+      "from": { "nodeId": "entry", "pinId": "entry.param_0" },
+      "to": { "nodeId": "mul", "pinId": "mul.a" }
+    },
+    {
+      "id": "c_entry_mul_b",
+      "from": { "nodeId": "entry", "pinId": "entry.param_0" },
+      "to": { "nodeId": "mul", "pinId": "mul.b" }
+    },
+    {
+      "id": "c_mul_return",
+      "from": { "nodeId": "mul", "pinId": "mul.result" },
+      "to": { "nodeId": "return", "pinId": "return.value" }
+    }
+  ]
+}

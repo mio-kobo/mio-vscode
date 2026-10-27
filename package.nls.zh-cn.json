@@ -9,5 +9,6 @@
   "mio.command.build.title": "构建当前文件",
   "mio.command.version.title": "显示编译器版本",
   "mio.command.output.title": "打开输出",
-  "mio.configuration.languageServer.enabled.description": "使用 Mio CLI 的 lsp 子命令启动 MioCore 语言服务器。不可用时回退到 mio check 诊断。"
+  "mio.configuration.languageServer.enabled.description": "使用 Mio CLI 的 lsp 子命令启动 MioCore 语言服务器。不可用时回退到 mio check 诊断。",
+  "mio.command.graph.generate.title": "生成 Mio 源代码"
 }

@@ -1,5 +1,50 @@
 # Changelog
 
+## Unreleased
+
+Mio Graph: blueprint-to-source compilation.
+
+### Added
+
+- `.miog` graph document format (`formatVersion: 1`) with stable node, pin and
+  connection IDs, plus lossless `parseGraphJson` / `serializeGraph` round
+  tripping.
+- UI-independent graph core in `src/graph`: model and node registry, structural
+  and type validation (including type inference through connections), semantic
+  analysis, a Graph IR, and a deterministic Mio source generator with a source
+  map.
+- Node support: `Entry` (program and function graphs), `Return`, `Constant`,
+  `VariableGet`, `VariableSet`, `Add`, `Subtract`, `Multiply`, `Divide`,
+  `Equal`, `NotEqual`, `GreaterThan`, `GreaterThanOrEqual`, `LessThan`,
+  `LessThanOrEqual`, `And`, `Or`, `Not`, `Branch`, `Sequence`, and
+  `FunctionCall`.
+- Exec-connection-driven statement ordering, `moshi`/`sore` generation,
+  `Sequence` pin ordering, stable `__mio_graph_N` temporaries for shared
+  sub-expressions and side-effecting calls, and explicit diagnostics for cycles,
+  missing returns, unreachable exec nodes, cross-branch value use, and
+  repeated impure evaluation.
+- `FunctionSignatureProvider` hook with `metadata.functions` declarations and
+  Mio builtins; the generator never hard-codes the standard library.
+- `Mio Graph: Generate Mio Source` (`mioGraph.generateSource`) for the new
+  `mio-graph` language (`.miog`): compiles the active graph, writes the adjacent
+  `.mio` with overwrite protection, opens it, and validates it with the
+  existing `mio check` integration. Structured diagnostics are published on the
+  `.miog` document.
+- Extension API `generateMioGraphSource(uri, options)` for future visual
+  editors.
+- Unit tests for model, validation, code generation, determinism and
+  serialization, plus compiler integration tests that run the real `mio check`
+  and `mio run` on generated sources. Example graphs live in
+  `examples/mio-graph`; see `docs/MIO_GRAPH.md`.
+
+### Notes
+
+- Phase 1 covers scalar data only; arrays, maps, structs, enums, nullable
+  values, loops, generics and explicit conversions are rejected rather than
+  emitted incorrectly.
+- Branch merging and multi-graph documents are not supported yet, so a program
+  graph cannot call a function graph defined in another `.miog`.
+
 ## 0.3.0 - 2026-10-18
 
 MioCore semantic navigation.

@@ -33,11 +33,13 @@
   "main": "./out/extension.js",
   "activationEvents": [
     "onLanguage:mio",
+    "onLanguage:mio-graph",
     "onCommand:mio.checkCurrentFile",
     "onCommand:mio.runCurrentFile",
     "onCommand:mio.buildCurrentFile",
     "onCommand:mio.showCompilerVersion",
-    "onCommand:mio.openOutput"
+    "onCommand:mio.openOutput",
+    "onCommand:mioGraph.generateSource"
   ],
   "contributes": {
     "configurationDefaults": {
@@ -60,6 +62,16 @@
           "light": "./assets/mio.svg",
           "dark": "./assets/mio.svg"
         }
+      },
+      {
+        "id": "mio-graph",
+        "aliases": [
+          "Mio Graph",
+          "miograph"
+        ],
+        "extensions": [
+          ".miog"
+        ]
       }
     ],
     "grammars": [
@@ -135,6 +147,12 @@
         "command": "mio.openOutput",
         "title": "%mio.command.output.title%",
         "category": "Mio"
+      },
+      {
+        "command": "mioGraph.generateSource",
+        "title": "%mio.command.graph.generate.title%",
+        "category": "Mio Graph",
+        "enablement": "editorLangId == mio-graph"
       }
     ],
     "menus": {
@@ -156,6 +174,10 @@
         },
         {
           "command": "mio.openOutput"
+        },
+        {
+          "command": "mioGraph.generateSource",
+          "when": "editorLangId == mio-graph"
         }
       ],
       "editor/context": [
@@ -173,6 +195,11 @@
           "command": "mio.buildCurrentFile",
           "when": "editorLangId == mio",
           "group": "mio@3"
+        },
+        {
+          "command": "mioGraph.generateSource",
+          "when": "editorLangId == mio-graph",
+          "group": "mio@4"
         }
       ]
     }
