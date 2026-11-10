@@ -34,6 +34,7 @@
   "activationEvents": [
     "onLanguage:mio",
     "onLanguage:mio-graph",
+    "workspaceContains:**/*_test.mio",
     "onCommand:mio.checkCurrentFile",
     "onCommand:mio.runCurrentFile",
     "onCommand:mio.buildCurrentFile",

@@ -78,6 +78,16 @@ real editor screenshots.
     fields, enum variants, struct-literal fields, and exported module symbols;
   - signature help shows parameter names, types, and return types, including
     nested calls and incomplete call expressions.
+- **Test Explorer** for `*_test.mio` files. Tests (`test_*` functions) are
+  discovered through the language server's document symbols, so the Mio parser,
+  not a regular expression, decides what is a test. Run results come from
+  `mio test --format=json`: passed, failed (with the reported messages), skipped
+  (the documented `kiso/testing` skip marker), and compile failures, which are
+  shown as errors rather than as failing tests. Selecting individual tests runs
+  them with `--run`; selecting a file or folder runs its whole package. The CLI
+  reports no source line for a failure, so failures are attached to the test
+  function when the language server located it. Debugging from the Test Explorer
+  is not available.
 - **CLI fallback diagnostics** from `mio check --format=json` when the language
   server is disabled, unavailable, or stopped. Only one diagnostic source is
   active at a time.
@@ -262,7 +272,7 @@ would require a real CLI flag.
   **not** implemented: the server does not advertise them and the extension
   does not register regex-based fake providers. See
   [docs/LSP_PLAN.md](docs/LSP_PLAN.md).
-- No debugger, test explorer, formatter, or Marketplace publication.
+- No debugger, formatter command, or Marketplace publication.
 
 ## Known limitations
 
