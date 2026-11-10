@@ -256,10 +256,12 @@ would require a real CLI flag.
 - When the server is disabled, missing, or stops, the extension falls back to
   `mio check --format=json` and clears the other diagnostic collection, so the
   Problems panel never shows both sources at once.
-- Semantic navigation (hover, go-to-definition, find references, document and
-  workspace symbols, rename, signature help, semantic tokens) is **not**
-  implemented yet; it is the next milestone. The extension does not register
-  regex-based fake providers. See [docs/LSP_PLAN.md](docs/LSP_PLAN.md).
+- Hover, go-to-definition, find references, document symbols, completion, and
+  signature help are provided by `mio lsp` (see the feature list above).
+  Workspace symbols, rename, semantic tokens, formatting, and code actions are
+  **not** implemented: the server does not advertise them and the extension
+  does not register regex-based fake providers. See
+  [docs/LSP_PLAN.md](docs/LSP_PLAN.md).
 - No debugger, test explorer, formatter, or Marketplace publication.
 
 ## Known limitations
