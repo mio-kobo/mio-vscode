@@ -1,0 +1,13 @@
+yobu "kiso/testing";
+
+waza helper() -> int64 {
+    kaesu 1;
+}
+
+waza test_passes() -> unit {
+    testing.expect(helper() == 1, "helper returns one");
+}
+
+waza test_fails() -> unit {
+    testing.expect(helper() == 2, "helper is not two");
+}

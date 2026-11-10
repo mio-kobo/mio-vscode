@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Added (Test Explorer)
+
+- VS Code Test Explorer integration backed by `mio test --format=json`, with
+  language-server test discovery, per-test results, skip handling, and compile
+  failures reported separately from test failures.
+
 Mio Graph: blueprint-to-source compilation.
 
 ### Added

@@ -10,6 +10,11 @@ import {
 import { MioDiagnosticManager } from './diagnostics/diagnosticManager';
 import { MioFoldingRangeProvider } from './editor/foldingProvider';
 import {
+  MioTestController,
+  type DiscoveredTest,
+  type TestRunSummary,
+} from './testing/testController';
+import {
   MioLanguageClient,
   type MioDiagnosticsOwner,
   type MioLanguageServerState,
@@ -32,6 +37,10 @@ export interface MioExtensionApi {
     uri: vscode.Uri,
     options?: GenerateGraphOptions,
   ): Promise<MioGraphGenerationOutcome>;
+  // Test Explorer hooks (used by integration tests and future UIs).
+  refreshTests(): Promise<void>;
+  getDiscoveredTests(): DiscoveredTest[];
+  runAllTests(): Promise<TestRunSummary>;
   dispose(): void;
 }
 
@@ -49,11 +58,15 @@ export async function activate(
   const commands = new MioCommands({ output, runner, cli, diagnostics });
   const graphCommands = new MioGraphCommands({ output, runner, cli });
   const languageClient = new MioLanguageClient({ output, cli });
+  const tests = new MioTestController({ output, runner, cli });
 
   // server 就绪时由它独占诊断；其余状态（禁用、失败、停止）回到 CLI 回退。
   const languageStateListener = languageClient.onDidChangeState((state) => {
     const lspOwnsDiagnostics = state === 'ready';
     diagnostics.setFallbackEnabled(!lspOwnsDiagnostics);
+    if (lspOwnsDiagnostics) {
+      void tests.refresh();
+    }
     output.appendLine(
       `[lsp] state=${state} diagnostics=${lspOwnsDiagnostics ? 'language server' : 'CLI fallback'}`,
     );
@@ -146,6 +159,7 @@ export async function activate(
       configurationListener.dispose();
       languageStateListener.dispose();
       folding.dispose();
+      tests.dispose();
       for (const command of commandDisposables) {
         command.dispose();
       }
@@ -168,6 +182,9 @@ export async function activate(
     getDiagnosticsOwner: () => diagnostics.diagnosticsOwner,
     generateMioGraphSource: (uri, options) =>
       graphCommands.generateFromUri(uri, options),
+    refreshTests: () => tests.refresh(),
+    getDiscoveredTests: () => tests.getDiscoveredTests(),
+    runAllTests: () => tests.runAll(),
     dispose: () => disposable.dispose(),
   };
 

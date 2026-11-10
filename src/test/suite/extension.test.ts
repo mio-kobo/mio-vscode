@@ -782,6 +782,47 @@ suite('Mio extension host', () => {
     }
   });
 
+  test('discovers and runs tests through the Test Explorer integration', async () => {
+    const cli = testCliPath();
+    assert.ok(cli !== undefined, 'a real Mio CLI is required (run npm run pretest)');
+    const bunko = path.resolve(__dirname, '../../../.mio-core/bunko');
+    assert.ok(fs.existsSync(bunko), `Bunko root missing: ${bunko}`);
+    const previousBunko = process.env['MIO_BUNKO'];
+    process.env['MIO_BUNKO'] = bunko;
+    try {
+      await setExecutablePath(cli);
+      const testFile = path.join(workspaceRoot(), 'tests', 'math_test.mio');
+      await openDocument(testFile);
+      // Discovery goes through the language server's document symbols.
+      const discovered = await waitFor('Mio tests to be discovered', async () => {
+        await api.refreshTests();
+        const names = api
+          .getDiscoveredTests()
+          .filter((entry) => entry.file === testFile);
+        return names.length === 2 ? names : undefined;
+      });
+      assert.deepEqual(
+        discovered.map((entry) => entry.name).sort(),
+        ['test_fails', 'test_passes'],
+      );
+      assert.ok(
+        discovered.every((entry) => entry.line !== undefined),
+        'language server locations are attached to discovered tests',
+      );
+
+      const summary = await api.runAllTests();
+      assert.deepEqual(summary, { passed: 1, failed: 1, skipped: 0, errored: 0 });
+    } finally {
+      if (previousBunko === undefined) {
+        delete process.env['MIO_BUNKO'];
+      } else {
+        process.env['MIO_BUNKO'] = previousBunko;
+      }
+      await setExecutablePath(undefined);
+      await closeAllEditors();
+    }
+  });
+
   test('disposes diagnostics and process resources', async () => {
     api.dispose();
     await delay(100);
