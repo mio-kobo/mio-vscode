@@ -201,6 +201,7 @@ suite('Mio TextMate grammar', () => {
       ['tsuzuku;', 'tsuzuku', 'keyword.control.mio'],
       ['kaesu value;', 'kaesu', 'keyword.control.mio'],
       ['awase (value) {', 'awase', 'keyword.control.mio'],
+      ['yuzuru value;', 'yuzuru', 'keyword.control.mio'],
       ['baai Ok(value) {', 'baai', 'keyword.control.case.mio'],
       ['moshi (hai) {', 'hai', 'constant.language.boolean.mio'],
       ['moshi (iie) {', 'iie', 'constant.language.boolean.mio'],

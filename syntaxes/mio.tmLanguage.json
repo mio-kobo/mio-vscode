@@ -441,7 +441,7 @@
       "patterns": [
         {
           "name": "keyword.control.mio",
-          "match": "\\b(?:moshi|sore|aida|kaesu|nukeru|tsuzuku|awase|baai)\\b"
+          "match": "\\b(?:moshi|sore|aida|kaesu|nukeru|tsuzuku|awase|baai|yuzuru)\\b"
         },
         {
           "name": "keyword.declaration.mio",
