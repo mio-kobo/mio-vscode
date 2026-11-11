@@ -174,7 +174,7 @@ suite('Mio extension host', () => {
     });
     await vscode.window.showTextDocument(document, { preview: false });
     const expectedPrefixes = [
-      'kaku', 'kaku-typed', 'waza', 'moshi', 'moshi-sore', 'aida',
+      'kaku', 'kaku-typed', 'waza', 'moshi-sore',
       'kaesu', 'yobu', 'kata', 'sentaku', 'awase', 'array', 'map',
     ];
     // A clean Extension Host loads contributed snippets asynchronously.

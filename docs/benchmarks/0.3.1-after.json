@@ -1,0 +1,92 @@
+{
+  "platform": "darwin arm64 24.6.0",
+  "vscode": "1.145.2",
+  "node": "v24.22.1",
+  "extensionInstrumentation": {
+    "localCompletion": {
+      "n": 310,
+      "median": 0.01312499999994543,
+      "p95": 0.5969169999998485,
+      "max": 1.413583000000017
+    },
+    "lspCompletionRoundTrip": {
+      "n": 110,
+      "median": 1.0231669999998303,
+      "p95": 3.512917000000016,
+      "max": 18.304833000000144
+    },
+    "lspDiagnosticConversion": {
+      "n": 23,
+      "median": 0.016957999999249296,
+      "p95": 0.03908300000011877,
+      "max": 0.1121659999998883
+    }
+  },
+  "lsp": "ready",
+  "rows": [
+    {
+      "operation": "completion API including LSP",
+      "lines": 20,
+      "n": 50,
+      "median": 1.4415000000001328,
+      "p95": 4.620082999999795,
+      "max": 10.002541000000065
+    },
+    {
+      "operation": "local completion cold after edit",
+      "lines": 20,
+      "n": 50,
+      "median": 0.035290999999915584,
+      "p95": 0.06808399999999892,
+      "max": 0.19220799999993687
+    },
+    {
+      "operation": "local completion cached",
+      "lines": 20,
+      "n": 50,
+      "median": 0.006333999999924345,
+      "p95": 0.01833400000009533,
+      "max": 0.04383400000006077
+    },
+    {
+      "operation": "unsaved edit to LSP diagnostic (5ms polling)",
+      "lines": 20,
+      "n": 10,
+      "median": 157.56820900000002,
+      "p95": 172.73095899999998,
+      "max": 172.73095899999998
+    },
+    {
+      "operation": "completion API including LSP",
+      "lines": 1000,
+      "n": 50,
+      "median": 2.6647500000003674,
+      "p95": 4.26733299999978,
+      "max": 4.501125000000229
+    },
+    {
+      "operation": "local completion cold after edit",
+      "lines": 1000,
+      "n": 50,
+      "median": 0.5861669999999322,
+      "p95": 0.734375,
+      "max": 1.418916999999965
+    },
+    {
+      "operation": "local completion cached",
+      "lines": 1000,
+      "n": 50,
+      "median": 0.005165999999917403,
+      "p95": 0.011957999999594904,
+      "max": 0.03858300000001691
+    },
+    {
+      "operation": "unsaved edit to LSP diagnostic (5ms polling)",
+      "lines": 1000,
+      "n": 10,
+      "median": 207.60662500000035,
+      "p95": 212.1300000000001,
+      "max": 212.1300000000001
+    }
+  ]
+}

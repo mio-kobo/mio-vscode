@@ -1,0 +1,40 @@
+{
+  "platform": "darwin arm64 24.6.0",
+  "vscode": "1.145.2",
+  "node": "v24.22.1",
+  "lsp": "ready",
+  "rows": [
+    {
+      "operation": "completion API including LSP",
+      "lines": 20,
+      "n": 50,
+      "median": 1.5772079999999278,
+      "p95": 2.535665999999992,
+      "max": 3.495832999999948
+    },
+    {
+      "operation": "unsaved edit to LSP diagnostic (5ms polling)",
+      "lines": 20,
+      "n": 10,
+      "median": 160.1333749999999,
+      "p95": 163.15483299999983,
+      "max": 163.15483299999983
+    },
+    {
+      "operation": "completion API including LSP",
+      "lines": 1000,
+      "n": 50,
+      "median": 2.327374999999847,
+      "p95": 4.673416999999972,
+      "max": 4.889666999999918
+    },
+    {
+      "operation": "unsaved edit to LSP diagnostic (5ms polling)",
+      "lines": 1000,
+      "n": 10,
+      "median": 211.8821250000001,
+      "p95": 216.56908299999986,
+      "max": 216.56908299999986
+    }
+  ]
+}

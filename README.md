@@ -341,3 +341,72 @@ their license is separate from the MIT-licensed code. See
 ## 独立仓库开发与发布
 
 见 [MIGRATION.md](MIGRATION.md)。测试需要真实 CLI，不允许因缺少 Go 跳过 LSP 测试。VS Code 测试 CLI 来自 core-source.json 固定 SHA 的独立临时克隆，构建失败即测试失败。核心仓库现位于 `mio-kobo/mio`；现有 Marketplace 版本与用户设置保持不变。
+
+## Smart editing (v0.3.1)
+
+Compatible with the released Mio **v2.1.2**; these are editor conveniences and
+make no changes to Mio syntax or compiler behavior.
+
+Accept `moshi` or `aida` completion to insert a condition and an indented block.
+The condition is selected first; **Tab** enters the body, another Tab exits,
+and **Shift+Tab** moves back. Accept `chant` to insert `chant();` or `len` to
+insert `len()` with the cursor inside the parentheses. Native snippet undo/redo
+and bracket handling apply. Existing parentheses and blocks are preserved.
+Expansion happens on accepting completion, not on every Space keystroke.
+
+Numeric conversions (`int8`–`int64`, `uint8`–`uint32`, `float32`, `float64`,
+`rune`) gain parentheses in clear expression positions such as `kaku x = uint8`.
+Type annotations, arrays, and generic type arguments keep plain type names.
+The requested `uint64` conversion is omitted: the pinned v2.1.2 compiler reports
+`E0201` for `uint64(1)` and its native type system has no Uint64. No new compiler
+type is introduced by this extension. Comments, ordinary strings, identifier interiors, and ambiguous contexts do not
+receive smart transformations. Local smart transformations decline multiple cursors.
+Other snippet aliases (`if`, `while`, `print`, `array-len`, `rune-literal`) remain
+available from the snippet picker.
+
+Inside `yobu "…"`, completion offers roots and module paths, including partial
+and nested paths. The extension uses a catalog verified against Mio Full v2.1.2
+embedded resources, plus workspace directories containing non-test `.mio` files
+and configured Bunko roots. It never downloads packages. An async bounded index
+refreshes on module creation/deletion, root settings and workspace changes;
+completion uses its last snapshot while refreshing. The catalog describes Full;
+Core installations need a matching external Bunko tree. Workspace candidates are
+relative to their indexed root; the compiler's import resolution remains authoritative.
+
+| Setting | Default | Behavior |
+| --- | --- | --- |
+| `mio.editing.smartSnippets` | `true` | Context-aware snippet suggestions |
+| `mio.editing.autoInsertParentheses` | `true` | Parentheses and control-flow blocks when accepting suggestions |
+| `mio.editing.autoInsertSemicolon` | `false` | Conservative semicolon insertion on Enter |
+| `mio.completion.importPaths` | `true` | Local import-path suggestions |
+| `mio.completion.bunkoRoots` | `[]` | Extra installed library roots, absolute or workspace-relative |
+
+Semicolon insertion also requires VS Code's native on-type formatting. Opt in
+for Mio yourself (the extension never changes global editor settings):
+
+```json
+{
+  "mio.editing.autoInsertSemicolon": true,
+  "[mio]": { "editor.formatOnType": true }
+}
+```
+
+Enter keeps its normal indentation and cursor behavior. Complete declarations,
+returns, imports and simple calls can gain `;` before a trailing comment.
+Incomplete/complex syntax, multiline expressions, block headers/closing braces,
+existing semicolons, multiple cursors, and paste operations are skipped.
+VS Code controls undo grouping: on some versions, undo first removes the
+formatting edit and a second undo removes Enter. Semicolons remain required by Mio.
+
+If diagnostics appear stale, check the Mio output channel and the configured
+CLI path. A running LSP owns live unsaved-buffer diagnostics; when unavailable,
+CLI fallback runs on save or **Mio: Check Current File**, using an unsaved-buffer
+snapshot for manual checks. Editing cancels stale fallback checks; save again to
+revalidate. Versioned stale LSP responses and results for closed documents are
+discarded; successful validation clears errors. An incomplete `yobu` can still
+legitimately produce `E0101` until it is completed. No compiler error code is
+suppressed. Unversioned server notifications cannot be reliably matched to their
+originating edit; extension changes cannot remove MioCore analysis/debounce latency.
+
+See [validation and measurements](docs/RELEASE-0.3.1.md) for reproducible tests,
+performance results, and implementation limits.

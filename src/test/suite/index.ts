@@ -20,6 +20,8 @@ function collectTestFiles(directory: string): string[] {
 export async function run(): Promise<void> {
   const mocha = new Mocha({
     ui: 'tdd',
+    // Benchmarks stress rapid-edit caches; isolate them from functional tests.
+    grep: process.env.MIO_BENCHMARK ? '^Editing performance' : process.env.MIO_TEST_GREP,
     color: true,
     timeout: 120_000,
     forbidPending: process.env.MIO_RELEASE_TESTS === '1',

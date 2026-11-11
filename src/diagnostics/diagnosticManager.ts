@@ -31,6 +31,7 @@ export class MioDiagnosticManager implements vscode.Disposable {
   private readonly jobs = new Map<string, Job>();
   private readonly timers = new Map<string, NodeJS.Timeout>();
   private readonly generations = new Map<string, number>();
+  private readonly closedTabs = new Set<string>();
   private disposed = false;
   private fallbackEnabled = true;
 
@@ -59,7 +60,24 @@ export class MioDiagnosticManager implements vscode.Disposable {
     return this.run(document, true);
   }
 
+  onDidChange(document: vscode.TextDocument): void {
+    if (document.languageId !== 'mio') { return; }
+    const key = document.uri.toString();
+    this.clearTimer(key);
+    this.cancelJob(key);
+    this.generations.set(key, (this.generations.get(key) ?? 0) + 1);
+    this.collection.delete(document.uri);
+  }
+
+  onDidCloseTab(uri: vscode.Uri): void {
+    this.closedTabs.add(uri.toString());
+    this.clearDocument(uri);
+  }
+
+  onDidOpenTab(uri: vscode.Uri): void { this.closedTabs.delete(uri.toString()); }
+
   onDidClose(document: vscode.TextDocument): void {
+    this.closedTabs.delete(document.uri.toString());
     this.clearDocument(document.uri);
   }
 
@@ -111,6 +129,7 @@ export class MioDiagnosticManager implements vscode.Disposable {
     this.clearAllTimers();
     this.cancelAllJobs();
     this.collection.dispose();
+    this.closedTabs.clear();
     this.generations.clear();
   }
 
@@ -174,9 +193,10 @@ export class MioDiagnosticManager implements vscode.Disposable {
     document: vscode.TextDocument,
     notify: boolean,
   ): Promise<boolean> {
-    if (!this.fallbackEnabled) {
+    if (this.disposed || document.isClosed || this.closedTabs.has(document.uri.toString()) || !this.fallbackEnabled) {
       return false;
     }
+    const version = document.version;
     const key = document.uri.toString();
     const generation = (this.generations.get(key) ?? 0) + 1;
     this.generations.set(key, generation);
@@ -224,7 +244,7 @@ export class MioDiagnosticManager implements vscode.Disposable {
         token: tokenSource.token,
       });
 
-      if (this.disposed || this.generations.get(key) !== generation) {
+      if (this.disposed || document.isClosed || document.version !== version || tokenSource.token.isCancellationRequested || !this.fallbackEnabled || this.generations.get(key) !== generation) {
         return false;
       }
       this.jobs.delete(key);

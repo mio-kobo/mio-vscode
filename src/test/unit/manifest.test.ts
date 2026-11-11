@@ -180,12 +180,17 @@ suite('extension manifest', () => {
     ]);
   });
 
-  test('contributes the five supported settings and no fake version switch', () => {
+  test('contributes the supported settings and no fake version switch', () => {
     const properties =
       manifest.contributes?.configuration?.properties ?? {};
     assert.deepEqual(Object.keys(properties).sort(), [
+      'mio.completion.bunkoRoots',
+      'mio.completion.importPaths',
       'mio.diagnostics.enabled',
       'mio.diagnostics.onSave',
+      'mio.editing.autoInsertParentheses',
+      'mio.editing.autoInsertSemicolon',
+      'mio.editing.smartSnippets',
       'mio.executablePath',
       'mio.languageServer.enabled',
       'mio.outputDirectory',

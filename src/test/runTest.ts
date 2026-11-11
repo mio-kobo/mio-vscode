@@ -1,4 +1,5 @@
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { runTests } from '@vscode/test-electron';
 
@@ -51,17 +52,22 @@ async function main(): Promise<void> {
     process.platform === 'win32' ? 'mio.exe' : 'mio',
   );
 
+  const userDataPath = fs.mkdtempSync(path.join(os.tmpdir(), 'mio-vscode-host-'));
   const options: Parameters<typeof runTests>[0] = {
     extensionDevelopmentPath,
     extensionTestsPath,
     launchArgs: [
       workspacePath,
+      '--user-data-dir', userDataPath,
       '--disable-extensions',
       '--skip-welcome',
       '--skip-release-notes',
       '--disable-workspace-trust',
     ],
     extensionTestsEnv: {
+      MIO_TEST_GREP: process.env.MIO_TEST_GREP ?? '',
+      MIO_EDITING_TIMINGS: process.env.MIO_EDITING_TIMINGS ?? '',
+      MIO_BENCHMARK: process.env.MIO_BENCHMARK ?? '',
       MIO_RELEASE_TESTS: process.env.MIO_RELEASE_TESTS ?? '',
       MIO_TEST_CLI: cliPath,
       MIO_TEST_PLUGIN_ROOT: extensionDevelopmentPath,
@@ -77,7 +83,9 @@ async function main(): Promise<void> {
     console.log('[runTest] no local VS Code found; downloading stable');
   }
 
-  await runTests(options);
+  try { await runTests(options); } finally {
+    fs.rmSync(userDataPath, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+  }
 }
 
 main().catch((error: unknown) => {

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.1
+
+- Add context-aware native snippets for `moshi`, `aida`, `chant`, `len`, and numeric conversions.
+- Complete `yobu` paths from a verified Mio Full v2.1.2 embedded catalog and cached local roots.
+- Add opt-in conservative semicolon formatting on Enter and resource-scoped editing settings.
+- Reject stale/closed-document diagnostics, cancel invalidated CLI checks, serialize LSP restarts, and keep local completion available during LSP startup.
+- Add unit and native Extension Host editing/lifecycle tests, opt-in timing instrumentation, and bilingual documentation. Mio compiler and language semantics are unchanged.
+
 ## Unreleased
 
 ### Added (Test Explorer)

@@ -1,3 +1,5 @@
+import { MioCompletionProvider } from './editor/completionProvider';
+import { MioSemicolonProvider } from './editor/semicolonProvider';
 import * as vscode from 'vscode';
 import { MioCliService } from './cli/cliService';
 import { ProcessRunner } from './cli/processRunner';
@@ -118,12 +120,30 @@ export async function activate(
     ),
   ];
 
+  const completion = new MioCompletionProvider();
+  const editing = [completion, vscode.languages.registerCompletionItemProvider({ language: 'mio' }, completion, '"', '/'),
+    vscode.languages.registerOnTypeFormattingEditProvider({ language: 'mio' }, new MioSemicolonProvider(), '\n')];
+  const changeListener = vscode.workspace.onDidChangeTextDocument(event => { if (event.contentChanges.length) { diagnostics.onDidChange(event.document); } });
+
   const folding = vscode.languages.registerFoldingRangeProvider(
     { language: 'mio' },
     new MioFoldingRangeProvider(),
   );
   const saveListener = vscode.workspace.onDidSaveTextDocument((document) => {
     diagnostics.onDidSave(document);
+  });
+  const tabListener = vscode.window.tabGroups.onDidChangeTabs(event => {
+    for (const group of vscode.window.tabGroups.all) {
+      for (const tab of group.tabs) {
+        if (tab.input instanceof vscode.TabInputText) { diagnostics.onDidOpenTab(tab.input.uri); }
+      }
+    }
+    for (const tab of event.closed) {
+      if (tab.input instanceof vscode.TabInputText &&
+          !vscode.window.tabGroups.all.some(group => group.tabs.some(other => other.input instanceof vscode.TabInputText && other.input.uri.toString() === (tab.input as vscode.TabInputText).uri.toString()))) {
+        diagnostics.onDidCloseTab(tab.input.uri);
+      }
+    }
   });
   const closeListener = vscode.workspace.onDidCloseTextDocument((document) => {
     diagnostics.onDidClose(document);
@@ -133,7 +153,7 @@ export async function activate(
       if (!event.affectsConfiguration('mio')) {
         return;
       }
-      cli.invalidate();
+      if (event.affectsConfiguration('mio.executablePath')) { cli.invalidate(); }
       if (
         event.affectsConfiguration('mio.executablePath') ||
         event.affectsConfiguration('mio.languageServer.enabled')
@@ -141,10 +161,10 @@ export async function activate(
         void languageClient.restart(context);
         return;
       }
-      if (languageClient.state !== 'ready') {
-        diagnostics.onConfigurationChanged();
+      if (event.affectsConfiguration('mio.diagnostics')) {
+        if (languageClient.state !== 'ready') { diagnostics.onConfigurationChanged(); }
+        if (event.affectsConfiguration('mio.diagnostics.enabled')) { languageClient.syncConfiguration(); }
       }
-      languageClient.syncConfiguration();
     });
 
   let disposed = false;
@@ -154,8 +174,11 @@ export async function activate(
         return;
       }
       disposed = true;
+      changeListener.dispose();
+      for (const item of editing) { item.dispose(); }
       saveListener.dispose();
       closeListener.dispose();
+      tabListener.dispose();
       configurationListener.dispose();
       languageStateListener.dispose();
       folding.dispose();
@@ -190,7 +213,7 @@ export async function activate(
 
   output.appendLine('Mio — Programming Language Tools activated.');
   try {
-    await languageClient.start(context);
+    void languageClient.start(context).catch(error => output.appendLine(`[lsp] ${errorMessage(error)}`));
   } catch (error) {
     output.appendLine(`[lsp] ${errorMessage(error)}`);
   }

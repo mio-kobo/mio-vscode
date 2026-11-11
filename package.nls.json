@@ -10,5 +10,10 @@
   "mio.command.version.title": "Show Compiler Version",
   "mio.command.output.title": "Open Output",
   "mio.configuration.languageServer.enabled.description": "Start the MioCore language server from the Mio CLI (mio lsp). When it is unavailable, diagnostics fall back to mio check.",
-  "mio.command.graph.generate.title": "Generate Mio Source"
+  "mio.command.graph.generate.title": "Generate Mio Source",
+  "mio.configuration.editing.smartSnippets.description": "Offer context-aware Mio snippets with native Tab navigation.",
+  "mio.configuration.editing.autoInsertParentheses.description": "Insert parentheses and blocks when accepting Mio smart snippets.",
+  "mio.configuration.editing.autoInsertSemicolon.description": "Insert semicolons on Enter for confidently complete statements. Also requires editor.formatOnType for Mio.",
+  "mio.configuration.completion.importPaths.description": "Complete yobu import paths from the Mio v2.1.2 catalog and local modules.",
+  "mio.configuration.completion.bunkoRoots.description": "Additional installed Bunko roots for import completion, absolute or relative to the workspace folder."
 }

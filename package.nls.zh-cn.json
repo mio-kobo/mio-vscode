@@ -10,5 +10,10 @@
   "mio.command.version.title": "显示编译器版本",
   "mio.command.output.title": "打开输出",
   "mio.configuration.languageServer.enabled.description": "使用 Mio CLI 的 lsp 子命令启动 MioCore 语言服务器。不可用时回退到 mio check 诊断。",
-  "mio.command.graph.generate.title": "生成 Mio 源代码"
+  "mio.command.graph.generate.title": "生成 Mio 源代码",
+  "mio.configuration.editing.smartSnippets.description": "提供支持原生 Tab 导航、能识别上下文的 Mio 代码片段。",
+  "mio.configuration.editing.autoInsertParentheses.description": "接受 Mio 智能代码片段时插入括号和代码块。",
+  "mio.configuration.editing.autoInsertSemicolon.description": "按 Enter 时为可确认已完整的语句添加分号。还需为 Mio 启用 editor.formatOnType。",
+  "mio.configuration.completion.importPaths.description": "从 Mio v2.1.2 目录和本地模块补全 yobu 导入路径。",
+  "mio.configuration.completion.bunkoRoots.description": "已安装 Bunko 的额外根目录，可使用绝对路径或相对于工作区的路径。"
 }

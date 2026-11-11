@@ -1,3 +1,7 @@
+import { timedAsync } from '../editor/performance';
+import { MioPushDiagnostics } from '../diagnostics/pushDiagnostics';
+import { completionContext } from '../editor/completionContext';
+import type { PublishDiagnosticsParams } from 'vscode-languageserver-protocol';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 import {
@@ -48,6 +52,8 @@ function errorMessage(error: unknown): string {
 // 通过 vscode-languageclient 连接 `mio lsp`。
 // server 未就绪时保持 CLI 回退，就绪后由 server 独占诊断。
 export class MioLanguageClient implements MioLanguageClientHost {
+  private readonly liveDiagnostics = new MioPushDiagnostics();
+  private lifecycle: Promise<void> = Promise.resolve();
   private client: LanguageClient | undefined;
   private currentState: MioLanguageServerState = 'disabled';
   private readonly listeners = new Set<MioLanguageServerStateListener>();
@@ -87,8 +93,8 @@ export class MioLanguageClient implements MioLanguageClientHost {
     return this.currentState === 'ready' && this.client !== undefined;
   }
 
-  async start(_context: vscode.ExtensionContext): Promise<void> {
-    if (this.client !== undefined || this.starting) {
+  private async startClient(_context: vscode.ExtensionContext): Promise<void> {
+    if (this.disposed || this.client !== undefined || this.starting) {
       return;
     }
     if (!this.enabled) {
@@ -127,7 +133,36 @@ export class MioLanguageClient implements MioLanguageClientHost {
           { scheme: 'untitled', language: 'mio' },
         ],
         outputChannel: this.outputChannel,
-        synchronize: { configurationSection: 'mio' },
+        middleware: {
+          provideCompletionItem: async (document, position, context, token, next) => {
+            const version = document.version;
+            const result = await timedAsync('lspCompletionRoundTrip', async () => next(document, position, context, token));
+            if (!result) { return result; }
+            if (document.isClosed || document.version !== version || token.isCancellationRequested) { return []; }
+            const config = vscode.workspace.getConfiguration('mio', document.uri);
+            const owned = new Set(completionContext(document, position, {
+              smartSnippets: config.get('editing.smartSnippets', true),
+              autoInsertParentheses: config.get('editing.autoInsertParentheses', true),
+            }).candidates.map(item => item.label));
+            const filter = (item: vscode.CompletionItem): boolean => {
+              const label = typeof item.label === 'string' ? item.label : item.label.label;
+              // Keep user symbols even when they shadow builtin names.
+              const builtin = /内置|builtin/i.test(item.detail ?? '');
+              if (builtin && ['chant', 'len'].includes(label) &&
+                (!config.get('editing.autoInsertParentheses', true) || !config.get('editing.smartSnippets', true) ||
+                 /^\s*\(/u.test(document.lineAt(position.line).text.slice(position.character)))) {
+                item.insertText = label;
+                if (item.textEdit) { item.textEdit.newText = label; }
+              }
+              const editor = vscode.window.activeTextEditor;
+              if (editor?.document === document && editor.selections.length !== 1) { return true; }
+              return !owned.has(label) || !(item.kind === vscode.CompletionItemKind.Keyword || builtin);
+            };
+            if (Array.isArray(result)) { return result.filter(filter); }
+            result.items = result.items.filter(filter);
+            return result;
+          },
+        },
         initializationOptions: {
           diagnosticsEnabled: this.diagnosticsEnabled,
           diagnosticsDelayMs: 150,
@@ -141,6 +176,15 @@ export class MioLanguageClient implements MioLanguageClientHost {
         clientOptions,
       );
       this.client = client;
+      const activeClient = client;
+      // Register through the supported notification API before start: replace the
+      // default push handler so protocol versions survive conversion/queuing.
+      client.onNotification('textDocument/publishDiagnostics', (params: PublishDiagnosticsParams) => {
+        void this.liveDiagnostics.accept(params,
+          () => activeClient.protocol2CodeConverter.asDiagnostics(params.diagnostics),
+          () => this.client === activeClient && this.diagnosticsEnabled,
+        ).catch(error => this.log(`diagnostic conversion failed: ${errorMessage(error)}`));
+      });
       this.stateSubscription = client.onDidChangeState((event) => {
         if (this.client !== client || this.stopping) {
           return;
@@ -193,14 +237,22 @@ export class MioLanguageClient implements MioLanguageClientHost {
     }
   }
 
-  async stop(): Promise<void> {
-    await this.shutdownClient();
-    this.setState('stopped');
+  start(context: vscode.ExtensionContext): Promise<void> {
+    return this.enqueue(() => this.startClient(context));
   }
 
-  async restart(context: vscode.ExtensionContext): Promise<void> {
-    await this.shutdownClient();
-    await this.start(context);
+  stop(): Promise<void> {
+    return this.enqueue(async () => { await this.shutdownClient(); this.setState('stopped'); });
+  }
+
+  restart(context: vscode.ExtensionContext): Promise<void> {
+    return this.enqueue(async () => { await this.shutdownClient(); await this.startClient(context); });
+  }
+
+  private enqueue(action: () => Promise<void>): Promise<void> {
+    const pending = this.lifecycle.then(action);
+    this.lifecycle = pending.catch(error => this.log(errorMessage(error)));
+    return pending;
   }
 
   syncConfiguration(): void {
@@ -208,6 +260,7 @@ export class MioLanguageClient implements MioLanguageClientHost {
     if (client === undefined) {
       return;
     }
+    if (!this.diagnosticsEnabled) { this.liveDiagnostics.clear(); }
     const configuration = vscode.workspace.getConfiguration('mio');
     const settings = {
       mio: {
@@ -239,11 +292,13 @@ export class MioLanguageClient implements MioLanguageClientHost {
 
   dispose(): void {
     this.disposed = true;
-    void this.shutdownClient();
+    this.liveDiagnostics.dispose();
+    void this.enqueue(() => this.shutdownClient());
     this.listeners.clear();
   }
 
   private async shutdownClient(): Promise<void> {
+    this.liveDiagnostics.clear();
     this.stopping = true;
     const client = this.client;
     this.client = undefined;
@@ -280,6 +335,7 @@ export class MioLanguageClient implements MioLanguageClientHost {
     if (this.currentState === state) {
       return;
     }
+    if (state !== 'ready') { this.liveDiagnostics.clear(); }
     this.currentState = state;
     for (const listener of [...this.listeners]) {
       try {
