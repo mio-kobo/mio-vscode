@@ -1,3 +1,4 @@
+import { relativeModuleDirectory } from '../../util/paths';
 import * as assert from 'node:assert/strict';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
@@ -103,5 +104,19 @@ suite('path helpers', () => {
       true,
     );
     assert.equal(samePath('/project/a/mio', '/project/b/mio'), false);
+  });
+});
+
+
+suite('Import module filesystem paths', () => {
+  test('Windows drive-letter case and Unicode paths', () => {
+    assert.equal(relativeModuleDirectory('D:\\work', 'd:\\work\\本地\\日本語\\module.mio', true), '本地/日本語');
+    assert.equal(relativeModuleDirectory('C:\\Bunko', 'c:\\Bunko\\外部\\module\\module.mio', true), '外部/module');
+  });
+  test('rejects other drives and parent directories', () => {
+    assert.equal(relativeModuleDirectory('D:\\work', 'C:\\other\\module.mio', true), undefined);
+    assert.equal(relativeModuleDirectory('/work', '/other/module.mio', false), undefined);
+    assert.equal(relativeModuleDirectory('/work', '/work/module.mio', false), undefined);
+    assert.equal(relativeModuleDirectory('/work', '/work/本地/日本語/module.mio', false), '本地/日本語');
   });
 });

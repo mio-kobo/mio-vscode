@@ -145,7 +145,7 @@ out-of-order push conversion, unsaved CLI stale results, real error creation and
 resolution, rapid imports, closed retained models and LSP/CLI ownership changes.
 Existing graph, grammar, resolver, CLI, Test Explorer and semantic-navigation tests
 remain included. No native keyboard overrides or semantic compiler pass is used for
-static expansion. Local results: **226 unit tests**, **29 functional Extension Host tests** on both the minimum-version line and official stable, **one separate benchmark test**, and **nine release-guard tests** passed. CI results are linked from the GitHub release.
+static expansion. Local results: **228 unit tests**, **29 functional Extension Host tests** on both the minimum-version line and official stable, **one separate benchmark test**, and **nine release-guard tests** passed. CI results are linked from the GitHub release.
 
 Production package: `mio-language-support-0.3.1.vsix`, plus its SHA256 sidecar.
 The existing VSIX checker validates required assets and excludes source/tests/core
@@ -184,3 +184,5 @@ Marketplace environment approvals, if required, are not bypassed.
 - `src/test/suite/00performance.test.ts`
 - `src/test/suite/01editing.test.ts`
 - `src/test/unit/editing.test.ts`
+- `src/util/paths.ts`
+- `src/test/unit/paths.test.ts`

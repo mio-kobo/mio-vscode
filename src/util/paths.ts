@@ -106,3 +106,15 @@ export function samePath(left: string, right: string): boolean {
   }
   return a === b;
 }
+
+/** Public import paths use '/', while Windows filesystem paths compare drive letters case-insensitively. */
+export function relativeModuleDirectory(
+  root: string,
+  file: string,
+  windows = process.platform === 'win32',
+): string | undefined {
+  const api = windows ? path.win32 : path.posix;
+  const relative = api.relative(root, api.dirname(file));
+  if (!relative || relative === '..' || relative.startsWith(`..${api.sep}`) || api.isAbsolute(relative)) { return undefined; }
+  return relative.split(api.sep).join('/');
+}
