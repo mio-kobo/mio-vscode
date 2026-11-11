@@ -258,7 +258,7 @@
     "@typescript-eslint/eslint-plugin": "^8.20.0",
     "@typescript-eslint/parser": "^8.20.0",
     "@vscode/test-electron": "^3.0.0",
-    "@vscode/vsce": "^4.0.0",
+    "@vscode/vsce": "4.1.0",
     "adm-zip": "^0.5.16",
     "eslint": "^9.18.0",
     "globals": "^15.14.0",
