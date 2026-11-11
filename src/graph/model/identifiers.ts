@@ -3,7 +3,7 @@
 
 import { MIO_GRAPH_RESERVED_PREFIX } from './types';
 
-// 来自 Mio v1 语言文档的关键字。
+// 来自 Mio 语言文档与编译器词法表的关键字。
 export const MIO_KEYWORDS: readonly string[] = [
   'kaku',
   'waza',
@@ -23,6 +23,8 @@ export const MIO_KEYWORDS: readonly string[] = [
   'yobu',
   'koukai',
   'teisu',
+  // Reserved since Mio 2.2.0 (decision D-3: fully reserved).
+  'yuzuru',
 ];
 
 export const MIO_PRIMITIVE_TYPE_NAMES: readonly string[] = [
