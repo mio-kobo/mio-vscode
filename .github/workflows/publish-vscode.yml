@@ -4,13 +4,22 @@ on:
   push:
     tags:
       - 'vscode-V*'
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing stable release tag to revalidate and publish
+        required: true
+        type: string
+
+env:
+  RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
 
 permissions:
   contents: read
 
 jobs:
   build:
-    if: github.repository == 'mio-kobo/mio-vscode' && github.event_name == 'push' && startsWith(github.ref, 'refs/tags/vscode-V')
+    if: github.repository == 'mio-kobo/mio-vscode' && ((github.event_name == 'push' && startsWith(github.ref, 'refs/tags/vscode-V')) || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'))
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     outputs:
@@ -20,14 +29,17 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Verify trusted main history
-        run: bash .github/scripts/check-release-history.sh
+      - name: Test and preserve trusted workflow guards
+        run: |
+          python3 -B .github/scripts/test_plugin_release.py -v
+          node --test .github/scripts/test_vsce_oidc.mjs
+          cp .github/scripts/check-release-history.sh "$RUNNER_TEMP/check-release-history.sh"
+      - name: Verify trusted main history and check out the immutable tag
+        run: bash "$RUNNER_TEMP/check-release-history.sh"
       - name: Test release guards
         run: python3 -B .github/scripts/test_plugin_release.py -v
       - name: Validate tag and package versions
         id: version
-        env:
-          RELEASE_TAG: ${{ github.ref_name }}
         run: python3 .github/scripts/plugin-release.py vscode "$RELEASE_TAG" --unpublished
       - uses: actions/setup-node@v4
         with:
@@ -53,8 +65,6 @@ jobs:
       - name: Check VSIX content
         run: npm run check
       - name: Validate final manifest and generate SHA256
-        env:
-          RELEASE_TAG: ${{ github.ref_name }}
         run: |
           mkdir release
           mapfile -t archives < <(find . -maxdepth 1 -name '*.vsix' -type f)
@@ -85,8 +95,12 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+      - name: Preserve trusted publishing tools before checking out the tag
+        run: |
+          cp .github/scripts/check-release-history.sh "$RUNNER_TEMP/check-release-history.sh"
+          cp .github/scripts/fix-vsce-oidc.mjs "$RUNNER_TEMP/fix-vsce-oidc.mjs"
       - name: Recheck trusted main history after approval
-        run: bash .github/scripts/check-release-history.sh
+        run: bash "$RUNNER_TEMP/check-release-history.sh"
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
@@ -99,10 +113,10 @@ jobs:
           name: vscode-${{ needs.build.outputs.version }}
           path: release
       - name: Recheck checksum, manifest and duplicate release
-        env:
-          RELEASE_TAG: ${{ github.ref_name }}
         run: |
           (cd release && sha256sum --check plugin.vsix.sha256)
           python3 .github/scripts/plugin-release.py vscode "$RELEASE_TAG" --archive release/plugin.vsix --unpublished
+      - name: Apply tested upstream OIDC protocol compatibility fix to the locked tool
+        run: node "$RUNNER_TEMP/fix-vsce-oidc.mjs" "$GITHUB_WORKSPACE/node_modules/@vscode/vsce/out/oidc.js"
       - name: Publish verified VSIX with OIDC (no PAT fallback)
         run: npx --no-install vsce publish --oidc --packagePath "$GITHUB_WORKSPACE/release/plugin.vsix"

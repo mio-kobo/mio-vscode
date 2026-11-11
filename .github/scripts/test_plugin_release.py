@@ -27,6 +27,7 @@ case "$1" in
   rev-parse)
     if [ "$2" = HEAD ]; then echo "${HEAD_RESULT:-trusted-sha}"; else echo trusted-sha; fi ;;
   merge-base) exit "${ANCESTOR_RESULT:-0}" ;;
+  checkout) exit "${CHECKOUT_RESULT:-0}" ;;
   *) exit 99 ;;
 esac
 ''')
@@ -38,7 +39,11 @@ esac
                                         ({"HEAD_RESULT": "different-sha"}, False),
                                         ({"ANCESTOR_RESULT": "1"}, False),
                                         ({"GITHUB_EVENT_NAME": "pull_request"}, False),
-                                        ({"GITHUB_REF_TYPE": "branch"}, False)]:
+                                        ({"GITHUB_REF_TYPE": "branch"}, False),
+                                        ({"GITHUB_EVENT_NAME": "workflow_dispatch", "GITHUB_REF_TYPE": "branch", "GITHUB_REF": "refs/heads/main", "RELEASE_TAG": "vscode-V0.3.1"}, True),
+                                        ({"GITHUB_EVENT_NAME": "workflow_dispatch", "GITHUB_REF_TYPE": "branch", "GITHUB_REF": "refs/heads/other", "RELEASE_TAG": "vscode-V0.3.1"}, False),
+                                        ({"GITHUB_EVENT_NAME": "workflow_dispatch", "GITHUB_REF_TYPE": "branch", "GITHUB_REF": "refs/heads/main", "RELEASE_TAG": "vscode-V0.3.1/evil"}, False),
+                                        ({"GITHUB_EVENT_NAME": "workflow_dispatch", "GITHUB_REF_TYPE": "branch", "GITHUB_REF": "refs/heads/main", "RELEASE_TAG": "vscode-V0.3.1", "CHECKOUT_RESULT": "1"}, False)]:
                 with self.subTest(overrides=overrides):
                     result = subprocess.run(["bash", str(release.ROOT / ".github/scripts/check-release-history.sh")],
                                             env={**environment, **overrides}, capture_output=True)
