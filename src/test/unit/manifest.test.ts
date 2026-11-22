@@ -168,10 +168,8 @@ suite('extension manifest', () => {
   });
 
   test('contributes the Mio commands and the Mio Graph command', () => {
-    const commands = new Set(
-      (manifest.contributes?.commands ?? []).map((entry) => entry.command),
-    );
-    assert.deepEqual([...commands].sort(), [
+    const commands = (manifest.contributes?.commands ?? []).map((entry) => entry.command);
+    assert.deepEqual(commands.sort(), [
       'mio.buildCurrentFile',
       'mio.checkCurrentFile',
       'mio.checkFormatting',

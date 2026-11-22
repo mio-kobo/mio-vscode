@@ -171,6 +171,84 @@ suite('process runner', () => {
     assert.equal(result.stdout.length, 100);
   });
 
+  // B-11: a CLI that starts a child process sharing its stdout/stderr (as a
+  // runner of a compiled program may) must not keep the result pending after
+  // a timeout, and must not leave the grandchild running.
+  const grandchildParent = [
+    "const { spawn } = require('node:child_process');",
+    "const child = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 4000)'], { stdio: 'inherit' });",
+    "process.stdout.write('grandchild:' + child.pid + '\\n');",
+    'setTimeout(() => {}, 60_000);',
+  ].join('\n');
+
+  function isAlive(pid: number): boolean {
+    try {
+      process.kill(pid, 0);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  test('a timeout settles promptly even when a grandchild holds the pipes', async function () {
+    this.timeout(10_000); // Measure the real delay instead of mocha's 2 s cap.
+    const started = Date.now();
+    const result = await runner.run(process.execPath, ['-e', grandchildParent], {
+      timeoutMs: 300,
+    });
+    const elapsed = Date.now() - started;
+    assert.equal(result.timedOut, true);
+    assert.ok(elapsed < 3_000, `settled after ${elapsed} ms`);
+    const pid = Number(/grandchild:(\d+)/u.exec(result.stdout)?.[1]);
+    assert.ok(Number.isInteger(pid), `no grandchild pid in ${JSON.stringify(result.stdout)}`);
+    if (process.platform !== 'win32') {
+      await delay(200);
+      assert.equal(isAlive(pid), false, 'the grandchild should be terminated with its parent');
+    }
+  });
+
+  test('a timeout settles after exit even if a descendant escaped the process group', async function () {
+    this.timeout(10_000);
+    // detached:true puts the grandchild in its own group, so group signals
+    // miss it and it keeps stdout open; only the settle-after-exit path helps.
+    const escapingParent = grandchildParent.replace("{ stdio: 'inherit' }", "{ stdio: 'inherit', detached: true }");
+    const started = Date.now();
+    const result = await runner.run(process.execPath, ['-e', escapingParent], {
+      timeoutMs: 300,
+    });
+    const elapsed = Date.now() - started;
+    const pid = Number(/grandchild:(\d+)/u.exec(result.stdout)?.[1]);
+    if (Number.isInteger(pid)) {
+      try { process.kill(pid, 'SIGKILL'); } catch { /* already gone */ }
+    }
+    assert.equal(result.timedOut, true);
+    assert.ok(elapsed < 3_000, `settled after ${elapsed} ms`);
+  });
+
+  test('cancellation settles promptly even when a grandchild holds the pipes', async function () {
+    this.timeout(10_000);
+    let listener: (() => void) | undefined;
+    const token: CancellationLike & { isCancellationRequested: boolean } = {
+      isCancellationRequested: false,
+      onCancellationRequested(callback: () => void) {
+        listener = callback;
+        return { dispose() { listener = undefined; } };
+      },
+    };
+    const promise = runner.run(process.execPath, ['-e', grandchildParent], {
+      timeoutMs: 0,
+      token,
+    });
+    await delay(300);
+    const started = Date.now();
+    token.isCancellationRequested = true;
+    listener?.();
+    const result = await promise;
+    const elapsed = Date.now() - started;
+    assert.equal(result.cancelled, true);
+    assert.ok(elapsed < 3_000, `settled after ${elapsed} ms`);
+  });
+
   test('dispose terminates running processes', async () => {
     const promise = runner.run(
       process.execPath,

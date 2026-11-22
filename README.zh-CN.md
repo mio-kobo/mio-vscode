@@ -53,6 +53,7 @@ Mio 是一门静态强类型编程语言，使用日语罗马音关键字，以 
   - 可选的 `Enter` 保守自动分号插入（`mio.editing.autoInsertSemicolon`）。
 - **MioCore 语言服务器（`mio lsp`）**：
   - 支持未保存缓冲区的实时编译诊断，具备增量编辑同步、文档版本校验、请求取消及 UTF-8 字节偏移到 VS Code UTF-16 位置的精确映射。
+  - 安装 Mio 后或语言服务器停止响应时，可执行 **Mio: 重启语言服务器**。启动时找不到 CLI，插件会在每个会话中提示一次。
   - **语义导航**：悬停提示（签名、推断类型与文档）、跨文件与 Bunko 导入跳转定义、基于符号身份的查找引用、大纲视图（Outline）、自动补全及函数签名提示。
   - **自动导入与整理导入**：接受无歧义的包成员补全可自动插入 `yobu`；执行 **Mio: 整理导入**（`Shift+Alt+O` / `Shift+Option+O`）即可排序并清理导入。
 - **代码格式化（`mio fmt`）**：
@@ -110,6 +111,8 @@ Marketplace 插件标识为 `exmikupro.mio-language-support`。独立发布流�
 go build -o mio ./cmd/mio
 ./mio version
 ```
+
+文档格式化需要支持 `mio fmt` 的 CLI。自动导入和整理导入需要支持[语义导入编辑](https://github.com/mio-kobo/mio/pull/117)的原生 Mio CLI。
 
 将 `mio`（Windows 为 `mio.exe`）加入 `PATH`，或配置 `mio.executablePath`。插件不会主动扫描工作区寻找可执行文件。
 

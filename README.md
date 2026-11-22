@@ -53,6 +53,7 @@ Basic editing features—syntax highlighting, snippets, smart editing, and impor
   - Optional conservative semicolon insertion on `Enter` (`mio.editing.autoInsertSemicolon`).
 - **MioCore Language Server (`mio lsp`)**:
   - Live diagnostics for open and unsaved buffers with incremental edits, version validation, request cancellation, and UTF-8 to UTF-16 position mapping.
+  - **Mio: Restart Language Server** restarts the server after installing Mio or when it stops responding. If the CLI is missing at startup, the extension shows one notification per session.
   - **Semantic Navigation**: Hover (signatures, inferred types, docs), Go to Definition (across files and Bunko imports), Find References (symbol-identity keyed), Outline view, Completion, and Signature Help.
   - **Auto-import & Organize Imports**: Accepting unambiguous package-member completions inserts `yobu`; run **Mio: Organize Imports** (`Shift+Alt+O` / `Shift+Option+O`) to sort and clean imports.
 - **Formatting (`mio fmt`)**:
@@ -110,6 +111,8 @@ Build the CLI from the [Mio repository](https://github.com/mio-kobo/mio):
 go build -o mio ./cmd/mio
 ./mio version
 ```
+
+Document formatting requires a CLI with `mio fmt` support. Auto-import and Organize Imports require a native Mio CLI with [semantic import editing support](https://github.com/mio-kobo/mio/pull/117).
 
 Add `mio` (or `mio.exe` on Windows) to your `PATH`, or set `mio.executablePath`. The extension does not scan the workspace for binaries.
 

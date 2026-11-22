@@ -3,7 +3,10 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
+import { LanguageClient, State } from 'vscode-languageclient/node';
+import { MioCliService } from '../../cli/cliService';
 import type { MioExtensionApi } from '../../extension';
+import { MioLanguageClient } from '../../lsp/client';
 import { samePath } from '../../util/paths';
 
 const extensionId = 'exmikupro.mio-language-support';
@@ -14,6 +17,7 @@ const expectedCommands = [
   'mio.buildCurrentFile',
   'mio.showCompilerVersion',
   'mio.openOutput',
+  'mio.restartLanguageServer',
   'mioGraph.generateSource',
 ];
 
@@ -380,6 +384,121 @@ suite('Mio extension host', () => {
     }
   });
 
+  test('mio.restartLanguageServer recovers after the CLI appears without a settings change', async function () {
+    const cli = testCliPath();
+    if (cli === undefined) {
+      this.skip();
+      return;
+    }
+    const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'mio restart-'));
+    const lateCli = path.join(
+      temporaryRoot,
+      process.platform === 'win32' ? 'mio.exe' : 'mio',
+    );
+    try {
+      await setLanguageServerEnabled(true);
+      await setExecutablePath(lateCli);
+      await waitFor(
+        'language server failed (CLI missing)',
+        () => api.getLanguageServerState() === 'failed',
+      );
+      assert.equal(api.getDiagnosticsOwner(), 'cli');
+
+      // Install the CLI at the configured path; nothing restarts on its own.
+      fs.copyFileSync(cli, lateCli);
+      if (process.platform !== 'win32') {
+        fs.chmodSync(lateCli, 0o755);
+      }
+      await delay(500);
+      assert.equal(api.getLanguageServerState(), 'failed');
+
+      await vscode.commands.executeCommand('mio.restartLanguageServer');
+      await waitFor(
+        'language server ready after restart command',
+        () => api.getLanguageServerState() === 'ready',
+      );
+      assert.equal(api.getDiagnosticsOwner(), 'lsp');
+    } finally {
+      await setExecutablePath(cli);
+      await waitFor(
+        'language server ready on the test CLI',
+        () => api.getLanguageServerState() === 'ready',
+      );
+      fs.rmSync(temporaryRoot, { recursive: true, force: true });
+    }
+  });
+
+  test('a missing CLI is reported to the user once per session, not only logged', async () => {
+    await setLanguageServerEnabled(true);
+    const shown: string[] = [];
+    const missing = {
+      kind: 'notFound' as const,
+      message: 'Mio CLI was not found (test stub).',
+    };
+    const stubCli = {
+      resolve: () => missing,
+      invalidate: () => undefined,
+      showProblem: (resolution: { message?: string }) => {
+        shown.push(resolution.message ?? '');
+      },
+      dispose: () => undefined,
+    } as unknown as MioCliService;
+    // Reuse the extension's channel: creating and immediately disposing a
+    // channel races the host's async channel creation and leaks a disposable.
+    const host = new MioLanguageClient({ output: api.outputChannel, cli: stubCli });
+    try {
+      const context = {} as vscode.ExtensionContext;
+      await host.start(context);
+      assert.equal(host.state, 'failed');
+      await host.restart(context);
+      await host.restart(context);
+      assert.equal(host.state, 'failed');
+      assert.deepEqual(shown, [missing.message]);
+    } finally {
+      await host.disposeAsync();
+    }
+  });
+
+  test('disposeAsync resolves only after the language server process has stopped', async function () {
+    const cli = testCliPath();
+    if (cli === undefined) {
+      this.skip();
+      return;
+    }
+    await setLanguageServerEnabled(true);
+    await setExecutablePath(cli);
+    const host = new MioLanguageClient({ output: api.outputChannel, cli: new MioCliService() });
+    try {
+      await host.start({} as vscode.ExtensionContext);
+      assert.equal(host.state, 'ready');
+      // Internal handles, read only to observe the real process lifecycle.
+      const inner = (host as unknown as { client?: LanguageClient }).client;
+      assert.ok(inner, 'a LanguageClient should be running');
+      const serverProcess = (inner as unknown as {
+        _serverProcess?: { exitCode: number | null; signalCode: string | null };
+      })._serverProcess;
+
+      await host.disposeAsync();
+      assert.equal(inner.state, State.Stopped);
+      if (serverProcess !== undefined) {
+        await waitFor(
+          'mio lsp process exit',
+          () => serverProcess.exitCode !== null || serverProcess.signalCode !== null,
+          5_000,
+        );
+        // A signal here would mean the client had to kill the server
+        // (checkProcessDied) instead of a graceful shutdown/exit.
+        console.log(
+          `[dispose-test] mio lsp exit code=${String(serverProcess.exitCode)} signal=${String(serverProcess.signalCode)}`,
+        );
+        assert.equal(serverProcess.signalCode, null);
+      }
+    } finally {
+      // Idempotent: a second call returns the same settled shutdown.
+      await host.disposeAsync();
+    }
+  });
+
   test('falls back to CLI diagnostics when the language server is disabled', async function () {
     const cli = testCliPath();
     if (cli === undefined) {
@@ -438,6 +557,49 @@ suite('Mio extension host', () => {
       );
     } finally {
       await closeAllEditors();
+      fs.rmSync(temporaryRoot, { recursive: true, force: true });
+    }
+  });
+
+  test('CLI fallback re-checks open saved files after diagnostics are re-enabled', async function () {
+    const cli = testCliPath();
+    if (cli === undefined) {
+      this.skip();
+      return;
+    }
+    const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'mio fallback config-'));
+    const sourcePath = path.join(temporaryRoot, 'config.mio');
+    fs.writeFileSync(
+      sourcePath,
+      ['waza broken() -> int64 {', '    kaesu missing_value;', '}', ''].join('\n'),
+      'utf8',
+    );
+    const configuration = (): vscode.WorkspaceConfiguration =>
+      vscode.workspace.getConfiguration('mio');
+    const findE0201 = (document: vscode.TextDocument): vscode.Diagnostic | undefined =>
+      vscode.languages
+        .getDiagnostics(document.uri)
+        .find((item) => item.source === 'mio' && String(item.code) === 'E0201');
+    try {
+      await setExecutablePath(cli);
+      await setLanguageServerEnabled(false);
+      await waitFor('language server disabled', () => api.getLanguageServerState() === 'disabled');
+      const document = await openDocument(sourcePath);
+      await vscode.commands.executeCommand('mio.checkCurrentFile');
+      await waitFor('initial CLI E0201', () => findE0201(document));
+
+      await configuration().update('diagnostics.enabled', false, vscode.ConfigurationTarget.Global);
+      await waitFor('diagnostics cleared', () => findE0201(document) === undefined);
+
+      // No save, no manual check: re-enabling alone must restore diagnostics.
+      await configuration().update('diagnostics.enabled', true, vscode.ConfigurationTarget.Global);
+      await waitFor('CLI E0201 after re-enable', () => findE0201(document), 15_000);
+      assert.equal(document.isDirty, false);
+    } finally {
+      await configuration().update('diagnostics.enabled', undefined, vscode.ConfigurationTarget.Global);
+      await closeAllEditors();
+      await setLanguageServerEnabled(true);
+      await waitFor('language server ready again', () => api.getLanguageServerState() === 'ready');
       fs.rmSync(temporaryRoot, { recursive: true, force: true });
     }
   });
@@ -830,6 +992,41 @@ suite('Mio extension host', () => {
       }
       await setExecutablePath(undefined);
       await closeAllEditors();
+    }
+  });
+
+  test('reloads every test file edited within one debounce window', async () => {
+    const cli = testCliPath();
+    assert.ok(cli !== undefined, 'a real Mio CLI is required (run npm run pretest)');
+    await setLanguageServerEnabled(true);
+    await setExecutablePath(cli);
+    await vscode.commands.executeCommand('mio.restartLanguageServer');
+    assert.equal(api.getLanguageServerState(), 'ready');
+    const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'mio reload-'));
+    const fileA = path.join(temporaryRoot, 'a_test.mio');
+    const fileB = path.join(temporaryRoot, 'b_test.mio');
+    fs.writeFileSync(fileA, 'waza test_a1() -> unit {\n}\n', 'utf8');
+    fs.writeFileSync(fileB, 'waza test_b1() -> unit {\n}\n', 'utf8');
+    try {
+      const documentA = await openDocument(fileA);
+      const documentB = await openDocument(fileB);
+      // Two edits well inside the 400 ms debounce, in different files.
+      const edit = new vscode.WorkspaceEdit();
+      edit.insert(documentA.uri, documentA.positionAt(documentA.getText().length), 'waza test_a2() -> unit {\n}\n');
+      edit.insert(documentB.uri, documentB.positionAt(documentB.getText().length), 'waza test_b2() -> unit {\n}\n');
+      assert.ok(await vscode.workspace.applyEdit(edit));
+
+      const names = await waitFor('both edited files reloaded', () => {
+        const found = api.getDiscoveredTests().map((entry) => entry.name);
+        return found.includes('test_a2') && found.includes('test_b2') ? found : undefined;
+      }, 15_000);
+      assert.ok(names.includes('test_a1') && names.includes('test_b1'));
+    } finally {
+      await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
+      await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
+      await closeAllEditors();
+      await setExecutablePath(undefined);
+      fs.rmSync(temporaryRoot, { recursive: true, force: true });
     }
   });
 

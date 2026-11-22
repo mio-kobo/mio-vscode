@@ -1,6 +1,8 @@
 import { timedAsync } from '../editor/performance';
 import * as vscode from 'vscode';
-import type { PublishDiagnosticsParams } from 'vscode-languageserver-protocol';
+// Re-exported by the declared dependency; vscode-languageserver-protocol is
+// only a transitive dependency and is not listed in package.json.
+import type { PublishDiagnosticsParams } from 'vscode-languageclient/node';
 
 /** Keep protocol version information until asynchronous diagnostic conversion finishes. */
 export class MioPushDiagnostics implements vscode.Disposable {

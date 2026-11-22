@@ -10,6 +10,7 @@
   "mio.command.build.title": "构建当前文件",
   "mio.command.version.title": "显示编译器版本",
   "mio.command.output.title": "打开输出",
+  "mio.command.restartLanguageServer.title": "重启语言服务器",
   "mio.configuration.languageServer.enabled.description": "使用 Mio CLI 的 lsp 子命令启动 MioCore 语言服务器。不可用时回退到 mio check 诊断。",
   "mio.command.graph.generate.title": "生成 Mio 源代码",
   "mio.configuration.editing.smartSnippets.description": "提供支持原生 Tab 导航、能识别上下文的 Mio 代码片段。",
@@ -23,6 +24,5 @@
   "mio.format.timeout.description": "等待 Mio 格式化完成的最长时间（毫秒）。",
   "mio.command.formatDocument.title": "格式化文档",
   "mio.command.organizeImports.title": "整理导入",
-  "mio.command.checkFormatting.title": "检查格式",
-  "mio.command.restartLanguageServer.title": "重启语言服务器"
+  "mio.command.checkFormatting.title": "检查格式"
 }

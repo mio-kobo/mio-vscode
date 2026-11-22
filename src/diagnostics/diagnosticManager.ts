@@ -119,6 +119,31 @@ export class MioDiagnosticManager implements vscode.Disposable {
     this.cancelAllJobs();
     this.collection.clear();
     this.generations.clear();
+    // Re-check what a save would check, so diagnostics do not stay missing
+    // until the next save. Dirty buffers keep the edit-clears/save-rechecks
+    // policy and are not checked here.
+    if (this.fallbackEnabled && this.enabled && this.onSave) {
+      // Only files the user has open in a tab; background documents (for
+      // example ones opened for test discovery) are not checked in bulk.
+      const inTabs = new Set<string>();
+      for (const group of vscode.window.tabGroups.all) {
+        for (const tab of group.tabs) {
+          if (tab.input instanceof vscode.TabInputText) {
+            inTabs.add(tab.input.uri.toString());
+          }
+        }
+      }
+      for (const document of vscode.workspace.textDocuments) {
+        if (
+          document.languageId === 'mio' &&
+          document.uri.scheme === 'file' &&
+          !document.isDirty &&
+          inTabs.has(document.uri.toString())
+        ) {
+          this.schedule(document);
+        }
+      }
+    }
   }
 
   dispose(): void {

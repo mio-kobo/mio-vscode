@@ -1,13 +1,13 @@
 import { timedAsync } from '../editor/performance';
 import { MioPushDiagnostics } from '../diagnostics/pushDiagnostics';
 import { completionContext } from '../editor/completionContext';
-import type { PublishDiagnosticsParams } from 'vscode-languageserver-protocol';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 import {
   LanguageClient,
   State,
   type LanguageClientOptions,
+  type PublishDiagnosticsParams,
   type ServerOptions,
 } from 'vscode-languageclient/node';
 import type { MioCliService } from '../cli/cliService';
@@ -62,6 +62,8 @@ export class MioLanguageClient implements MioLanguageClientHost {
   private starting = false;
   private stopping = false;
   private disposed = false;
+  private disposal: Promise<void> | undefined;
+  private reportedMissingCli = false;
   private readonly outputChannel: vscode.OutputChannel;
 
   constructor(private readonly options: MioLanguageClientOptions) {
@@ -107,6 +109,12 @@ export class MioLanguageClient implements MioLanguageClientHost {
     const resolution = this.options.cli.resolve();
     if (resolution.kind !== 'found') {
       this.log(`language server not started: ${resolution.message}`);
+      // Without this, a missing CLI only shows up in the Output channel and the
+      // user sees no diagnostics without knowing why. Notify once per session.
+      if (!this.reportedMissingCli) {
+        this.reportedMissingCli = true;
+        this.options.cli.showProblem(resolution);
+      }
       this.setState('failed');
       return;
     }
@@ -297,10 +305,20 @@ export class MioLanguageClient implements MioLanguageClientHost {
   }
 
   dispose(): void {
+    void this.disposeAsync();
+  }
+
+  // Resolves once the server has been sent shutdown/exit and the client is
+  // disposed, so deactivate() can wait for it instead of racing host exit.
+  disposeAsync(): Promise<void> {
+    if (this.disposal !== undefined) {
+      return this.disposal;
+    }
     this.disposed = true;
     this.liveDiagnostics.dispose();
-    void this.enqueue(() => this.shutdownClient());
     this.listeners.clear();
+    this.disposal = this.enqueue(() => this.shutdownClient()).catch(() => undefined);
+    return this.disposal;
   }
 
   private async shutdownClient(): Promise<void> {

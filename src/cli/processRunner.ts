@@ -38,10 +38,15 @@ export class ProcessRunError extends Error {
 const DEFAULT_TIMEOUT_MS = 30_000;
 const DEFAULT_MAX_OUTPUT_BYTES = 4 * 1024 * 1024;
 const KILL_GRACE_MS = 1_500;
+const SETTLE_AFTER_EXIT_MS = 500;
+// Windows has no POSIX process groups; detached there would open a console.
+const USE_PROCESS_GROUPS = process.platform !== 'win32';
 
 // 启动外部 Mio CLI。始终使用参数数组并关闭 shell，路径和参数不会被拼接执行。
 export class ProcessRunner {
   private readonly running = new Set<ChildProcess>();
+  private readonly terminated = new WeakSet<ChildProcess>();
+  private readonly afterTermination = new WeakMap<ChildProcess, () => void>();
 
   run(
     executable: string,
@@ -56,6 +61,9 @@ export class ProcessRunner {
           env: options.env === undefined ? process.env : { ...process.env, ...options.env },
           shell: false,
           windowsHide: true,
+          // POSIX: make the child a process-group leader so terminate() can
+          // signal descendants too. The child is still awaited (not unref'd).
+          detached: USE_PROCESS_GROUPS,
           stdio: [options.input === undefined ? 'ignore' : 'pipe', 'pipe', 'pipe'],
         });
       } catch (error) {
@@ -116,9 +124,13 @@ export class ProcessRunner {
         this.terminate(child);
       });
 
+      let settleTimer: NodeJS.Timeout | undefined;
       const cleanup = (): void => {
         if (timeout !== undefined) {
           clearTimeout(timeout);
+        }
+        if (settleTimer !== undefined) {
+          clearTimeout(settleTimer);
         }
         cancellation?.dispose();
         child.stdout?.off('data', onStdout);
@@ -126,31 +138,7 @@ export class ProcessRunner {
         this.running.delete(child);
       };
 
-      child.once('error', (error) => {
-        if (settled) {
-          return;
-        }
-        settled = true;
-        cleanup();
-        reject(this.startError(executable, error));
-      });
-
-      child.stdin?.on('error', (error: NodeJS.ErrnoException) => {
-        // A CLI rejecting arguments can close stdin before it reports stderr.
-        if (error.code === 'EPIPE' || error.code === 'ERR_STREAM_DESTROYED' || settled || cancelled || timedOut) { return; }
-        settled = true;
-        cleanup();
-        this.terminate(child);
-        reject(new ProcessRunError(`Failed to write to Mio CLI stdin: ${error.message}`, error.code, error));
-      });
-      if (options.token?.isCancellationRequested) {
-        cancelled = true;
-        this.terminate(child);
-      } else {
-        child.stdin?.end(options.input);
-      }
-
-      child.once('close', (code, signal) => {
+      const finish = (code: number | null, signal: NodeJS.Signals | null): void => {
         if (settled) {
           return;
         }
@@ -165,7 +153,62 @@ export class ProcessRunner {
           cancelled: cancelled || (options.token?.isCancellationRequested ?? false),
           truncated,
         });
+      };
+
+      // 'close' waits until every holder of stdout/stderr is gone. After we
+      // terminated the process, a surviving descendant (for example one that
+      // escaped the process group, or any child on Windows) must not keep the
+      // result pending, so settle shortly after the process itself has exited.
+      const settleAfterExit = (): void => {
+        const exited = child.exitCode !== null || child.signalCode !== null;
+        if (settled || settleTimer !== undefined || !exited) {
+          return;
+        }
+        settleTimer = setTimeout(() => {
+          child.stdin?.destroy();
+          child.stdout?.destroy();
+          child.stderr?.destroy();
+          finish(child.exitCode, child.signalCode);
+        }, SETTLE_AFTER_EXIT_MS);
+        settleTimer.unref();
+      };
+      this.afterTermination.set(child, settleAfterExit);
+
+      child.once('error', (error) => {
+        if (settled) {
+          return;
+        }
+        settled = true;
+        cleanup();
+        reject(this.startError(executable, error));
       });
+
+      child.once('exit', () => {
+        if (this.terminated.has(child)) {
+          settleAfterExit();
+        }
+      });
+
+      child.once('close', (code, signal) => {
+        finish(code, signal);
+      });
+
+      child.stdin?.on('error', (error: NodeJS.ErrnoException) => {
+        // A CLI rejecting arguments can close stdin before it reports stderr.
+        if (error.code === 'EPIPE' || error.code === 'ERR_STREAM_DESTROYED' || settled || this.terminated.has(child)) {
+          return;
+        }
+        settled = true;
+        cleanup();
+        this.terminate(child);
+        reject(new ProcessRunError(`Failed to write to Mio CLI stdin: ${error.message}`, error.code, error));
+      });
+      if (options.token?.isCancellationRequested) {
+        cancelled = true;
+        this.terminate(child);
+      } else {
+        child.stdin?.end(options.input);
+      }
     });
   }
 
@@ -176,23 +219,39 @@ export class ProcessRunner {
     this.running.clear();
   }
 
+  // POSIX children run in their own process group (see spawn), so the whole
+  // tree started by the CLI is signalled, not only the direct child.
   private terminate(child: ChildProcess): void {
+    if (this.terminated.has(child)) {
+      return;
+    }
+    this.terminated.add(child);
+    this.signal(child, 'SIGTERM');
+    const force = setTimeout(() => {
+      this.signal(child, 'SIGKILL');
+    }, KILL_GRACE_MS);
+    force.unref();
+    // Already exited (descendants may still hold the pipes): settle anyway.
+    this.afterTermination.get(child)?.();
+  }
+
+  private signal(child: ChildProcess, signal: NodeJS.Signals): void {
+    if (USE_PROCESS_GROUPS && child.pid !== undefined) {
+      try {
+        process.kill(-child.pid, signal);
+        return;
+      } catch {
+        // The group is gone (ESRCH) or not ours; fall back to the child.
+      }
+    }
     if (child.exitCode !== null || child.signalCode !== null) {
       return;
     }
     try {
-      child.kill();
+      child.kill(signal);
     } catch {
       // 进程可能已经退出。
     }
-    const force = setTimeout(() => {
-      try {
-        child.kill('SIGKILL');
-      } catch {
-        // 进程可能已经退出。
-      }
-    }, KILL_GRACE_MS);
-    force.unref();
   }
 
   private startError(executable: string, error: unknown): ProcessRunError {
