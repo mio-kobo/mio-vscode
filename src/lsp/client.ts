@@ -58,6 +58,7 @@ export class MioLanguageClient implements MioLanguageClientHost {
   private currentState: MioLanguageServerState = 'disabled';
   private readonly listeners = new Set<MioLanguageServerStateListener>();
   private stateSubscription: vscode.Disposable | undefined;
+  private sourceWatcher: vscode.FileSystemWatcher | undefined;
   private starting = false;
   private stopping = false;
   private disposed = false;
@@ -127,12 +128,15 @@ export class MioLanguageClient implements MioLanguageClientHost {
         baseEnv: process.env,
       });
       const serverOptions: ServerOptions = launch;
+      this.sourceWatcher?.dispose();
+      this.sourceWatcher = vscode.workspace.createFileSystemWatcher('**/*.mio');
       const clientOptions: LanguageClientOptions = {
         documentSelector: [
           { scheme: 'file', language: 'mio' },
           { scheme: 'untitled', language: 'mio' },
         ],
         outputChannel: this.outputChannel,
+        synchronize: { fileEvents: this.sourceWatcher },
         middleware: {
           provideCompletionItem: async (document, position, context, token, next) => {
             const version = document.version;
@@ -231,6 +235,8 @@ export class MioLanguageClient implements MioLanguageClientHost {
           // 忽略重复释放。
         }
       }
+      this.sourceWatcher?.dispose();
+      this.sourceWatcher = undefined;
       this.setState('failed');
     } finally {
       this.starting = false;
@@ -316,6 +322,8 @@ export class MioLanguageClient implements MioLanguageClientHost {
         // 忽略重复释放。
       }
     }
+    this.sourceWatcher?.dispose();
+    this.sourceWatcher = undefined;
     this.stopping = false;
   }
 
