@@ -7,107 +7,77 @@
 <p align="center"><strong>Visual Studio Code support for the Mio programming language</strong></p>
 
 <p align="center">
-  <a href="https://github.com/mio-kobo/mio">Mio project</a> ·
-  <a href="https://github.com/mio-kobo/mio/blob/Mio-2/docs/LANGUAGE.md">Language reference</a> ·
+  English · <a href="README.zh-CN.md">简体中文</a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/mio-kobo/mio">Mio Project</a> ·
+  <a href="https://github.com/mio-kobo/mio/blob/Mio-2/docs/LANGUAGE.md">Language Reference</a> ·
+  <a href="https://github.com/mio-kobo/mio/blob/Mio-2/docs/BUNKO.md">Bunko Stdlib</a> ·
   <a href="https://github.com/mio-kobo/mio/releases">Releases</a>
 </p>
 
-Mio is a statically typed programming language with Japanese romaji keywords,
-a Mochi bytecode toolchain, and the modular **Bunko** standard library. This
-extension brings `.mio` files into VS Code with syntax highlighting, editor
-conventions, snippets, MioCore language server diagnostics, and Mio CLI
-commands.
+Mio is a statically typed programming language featuring Japanese romaji keywords, a Mochi bytecode toolchain, and the modular **Bunko** standard library. This extension brings `.mio` and `.miog` (Mio Graph) support into VS Code with syntax highlighting, smart editing, snippets, MioCore LSP diagnostics and navigation, formatting, Test Explorer, and Mio CLI integration.
 
-The extension works without the Mio CLI for basic editing. CLI features are
-enabled automatically when `mio` (or `mio.exe`) is available on `PATH`, or when
-`mio.executablePath` points to a Mio executable.
+Basic editing features—syntax highlighting, snippets, smart editing, and import path completion—work out of the box without the Mio CLI. Compiler-backed features activate automatically when `mio` (or `mio.exe`) is on `PATH`, or when `mio.executablePath` is configured.
 
-## Syntax preview
+---
 
-Dark theme:
+## Syntax Preview
+
+**Dark Theme**
 
 ![Mio syntax highlighting on a dark theme](docs/images/syntax-preview-dark.png)
 
-Light theme:
+**Light Theme**
 
 ![Mio syntax highlighting on a light theme](docs/images/syntax-preview-light.png)
 
-These preview images are generated from the extension's TextMate scope palette.
-See [docs/images/README.md](docs/images/README.md) for how to replace them with
-real editor screenshots.
+> Preview images are generated from the extension's TextMate scope palette. See [docs/images/README.md](docs/images/README.md) for instructions on replacing them with editor screenshots.
+
+---
 
 ## Features
 
-- **TextMate syntax highlighting** for the current Mio language version (V0.5,
-  as used by Mio `1.0.0-beta.1`):
-  - keywords: `kaku`, `waza`, `moshi`, `sore`, `aida`, `kaesu`, `nukeru`,
-    `tsuzuku`, `yobu`, `kata`, `sentaku`, `awase`, `baai`, `koukai`, `teisu`
-  - `hai`, `iie`, and `mu`
-  - built-in types: fixed-width integers, `float32`, `float64`, `rune`, `bool`,
-    `string`, `unit`, `resource`, `Map`, and the numeric constraints
-    `Number`, `Integer`, `Signed`, `Float`
-  - function declarations and calls, closures, parameters, struct fields, enum
-    variants, match arms, generic declarations and applications, imports,
-    arrays, numbers, strings, runes, comments, and operators
-  - keywords inside ordinary strings and comments are **not** highlighted
-- **Language configuration**: auto-closing and surrounding pairs, bracket
-  matching, `//` and `/* ... */` comments, indentation rules, region markers,
-  a Mio-aware word pattern, and brace/comment folding.
-- **Snippets** for variables, constants, functions, closures, generics,
-  conditionals, `aida` loops, `nukeru`/`tsuzuku`, returns, imports, structs,
-  enums, exhaustive `awase` matches, arrays, `Map`, nullable values, and runes.
-- **Mio CLI commands**:
-  - `Mio: Check Current File`
-  - `Mio: Run Current File`
-  - `Mio: Build Current File`
-  - `Mio: Show Compiler Version`
-  - `Mio: Open Output`
-- **MioCore language server** launched from the Mio CLI (`mio lsp`) through
-  `vscode-languageclient`. It publishes compiler diagnostics for open buffers,
-  including unsaved text, with document versioning, incremental edits,
-  cancellation, and UTF-8 byte offset to VS Code UTF-16 position mapping.
-- **Semantic navigation** backed by the real Resolver and TypeChecker:
-  - hover shows signatures, inferred types, declarations, and documentation;
-  - go to definition works for variables, parameters, functions, struct fields,
-    enum variants, generics, and imported Bunko symbols across files;
-  - find references is keyed by symbol identity, so shadowed names, comments,
-    and strings are never confused with real references;
-  - the Outline view shows functions, variables, constants, structs with
-    fields, enums with variants, and function parameters;
-  - completion lists keywords, locals, parameters, functions, types, struct
-    fields, enum variants, struct-literal fields, and exported module symbols;
-  - signature help shows parameter names, types, and return types, including
-    nested calls and incomplete call expressions.
-- **Test Explorer** for `*_test.mio` files. Tests (`test_*` functions) are
-  discovered through the language server's document symbols, so the Mio parser,
-  not a regular expression, decides what is a test. Run results come from
-  `mio test --format=json`: passed, failed (with the reported messages), skipped
-  (the documented `kiso/testing` skip marker), and compile failures, which are
-  shown as errors rather than as failing tests. Selecting individual tests runs
-  them with `--run`; selecting a file or folder runs its whole package. The CLI
-  reports no source line for a failure, so failures are attached to the test
-  function when the language server located it. Debugging from the Test Explorer
-  is not available.
-- **CLI fallback diagnostics** from `mio check --format=json` when the language
-  server is disabled, unavailable, or stopped. Only one diagnostic source is
-  active at a time.
-- **Safe process execution**: every CLI call uses an argument array with
-  `shell: false`; paths containing spaces, Chinese, or Japanese are passed
-  through unchanged.
-- **Bilingual README** and a 128×128 Marketplace icon derived from the project's
-  language logo.
+- **TextMate Syntax Highlighting (V0.5)**:
+  - Keywords: `kaku`, `waza`, `moshi`, `sore`, `aida`, `kaesu`, `nukeru`, `tsuzuku`, `yobu`, `kata`, `sentaku`, `awase`, `baai`, `koukai`, `teisu`
+  - Literals: `hai`, `iie`, `mu`
+  - Built-in types & constraints: fixed-width integers, `float32`, `float64`, `rune`, `bool`, `string`, `unit`, `resource`, `Map`, `Number`, `Integer`, `Signed`, `Float`
+  - Accurate scoping for functions, closures, structs, enums, `awase` match arms, generics, imports, arrays, comments, and operators (keywords inside strings/comments are never highlighted).
+- **Language Conventions & Snippets**:
+  - Auto-closing pairs, bracket matching, `//` and `/* ... */` comments, indentation rules, folding, and Mio-aware word patterns.
+  - Rich snippets for variables, constants, functions, closures, generics, control flow, structs, enums, exhaustive `awase` matches, arrays, `Map`, and nullable values.
+- **Smart Editing (Mio v2.1.2 Compatible)**:
+  - Context-aware Tab-navigated blocks for `moshi` and `aida`, plus automatic parentheses for `chant();`, `len()`, and numeric conversions (`int8`–`int64`, `uint8`–`uint32`, `float32`, `float64`, `rune`) in clear expression positions.
+  - Import path completion inside `yobu "…"` using a verified Mio Full v2.1.2 catalog, workspace modules, and configured Bunko roots.
+  - Optional conservative semicolon insertion on `Enter` (`mio.editing.autoInsertSemicolon`).
+- **MioCore Language Server (`mio lsp`)**:
+  - Live diagnostics for open and unsaved buffers with incremental edits, version validation, request cancellation, and UTF-8 to UTF-16 position mapping.
+  - **Semantic Navigation**: Hover (signatures, inferred types, docs), Go to Definition (across files and Bunko imports), Find References (symbol-identity keyed), Outline view, Completion, and Signature Help.
+  - **Auto-import & Organize Imports**: Accepting unambiguous package-member completions inserts `yobu`; run **Mio: Organize Imports** (`Shift+Alt+O` / `Shift+Option+O`) to sort and clean imports.
+- **Formatting (`mio fmt`)**:
+  - Format the active buffer (including unsaved edits) via **Format Document** (`Shift+Alt+F` / `Shift+Option+F`) or check formatting with **Mio: Check Formatting**.
+- **Test Explorer**:
+  - Discovers `test_*` functions in `*_test.mio` files via LSP document symbols and runs them with `mio test --format=json` (supports individual `--run` or package-level runs, pass/fail/skip states, and compile-error reporting).
+- **CLI Fallback & Safe Execution**:
+  - Automatically falls back to `mio check --format=json` when the LSP is disabled, unavailable, or stopped (only one diagnostic source is active at a time).
+  - All CLI invocations use argument arrays with `shell: false`, safely handling paths with spaces, Chinese, or Japanese characters.
+- **Mio Graph (`.miog`)**:
+  - Compiles `.miog` visual blueprints into validated `<name>.mio` source files.
+
+---
 
 ## Installation
 
-### From a VSIX (0.3.0)
+### From VSIX
 
 ```bash
-code --install-extension mio-language-support-0.3.0.vsix
+code --install-extension mio-language-support-0.3.1.vsix
 ```
 
-Then reload VS Code and open any `.mio` file.
+Reload VS Code and open any `.mio` file.
 
-### From source
+### From Source
 
 ```bash
 git clone https://github.com/mio-kobo/mio-vscode.git
@@ -115,316 +85,62 @@ cd mio-vscode
 npm ci
 npm run compile
 npx vsce package
-code --install-extension mio-language-support-0.3.0.vsix
+code --install-extension mio-language-support-0.3.1.vsix
 ```
 
-The retained Marketplace identity is `exmikupro.mio-language-support`.
-Keep its publisher and extension name unchanged. Publishing is disabled during
-migration; see [PUBLISHING.md](PUBLISHING.md) for the independent release workflow.
+The Marketplace identity is `exmikupro.mio-language-support`. See [PUBLISHING.md](PUBLISHING.md) for the independent release workflow.
 
-## Supported platforms
+### Supported Platforms
 
-- macOS (Apple Silicon and Intel)
-- Windows (x64 and ARM64)
-- Linux (x64 and ARM64)
+- **macOS**: Apple Silicon & Intel
+- **Windows**: x64 & ARM64
+- **Linux**: x64 & ARM64
 
-The extension itself is platform-neutral. The Mio CLI must match your platform.
+The extension is platform-neutral; the Mio CLI binary must match your OS and architecture.
 
-## Mio CLI configuration
+---
 
-Build the CLI from the Mio repository:
+## Configuration
+
+### Mio CLI & Bunko Setup
+
+Build the CLI from the [Mio repository](https://github.com/mio-kobo/mio):
 
 ```bash
 go build -o mio ./cmd/mio
 ./mio version
 ```
 
-Put `mio` on `PATH` (or `mio.exe` on Windows), or configure an absolute path.
-The extension does not scan the workspace for a Mio binary; it only uses the
-configured path or `PATH`.
+Add `mio` (or `mio.exe` on Windows) to your `PATH`, or set `mio.executablePath`. The extension does not scan the workspace for binaries.
+
+For projects importing `kiso/...`, the extension follows the CLI's Bunko lookup order:
+1. The `MIO_BUNKO` environment variable (if it points to a directory).
+2. The nearest `bunko/` directory above the source file.
+
+### Extension Settings
 
 | Setting | Default | Description |
 | --- | --- | --- |
-| `mio.executablePath` | `""` | Absolute path to the Mio CLI. Empty means search `PATH` for `mio` / `mio.exe`. `~` is expanded. |
-| `mio.languageServer.enabled` | `true` | Launch the MioCore language server with `mio lsp`. When false or unavailable, diagnostics fall back to `mio check`. |
-| `mio.diagnostics.enabled` | `true` | Show diagnostics. The language server provides them while it runs; otherwise `mio check --format=json` is used. |
+| `mio.executablePath` | `""` | Absolute path to the Mio CLI (`~` expanded). Empty searches `PATH` for `mio` / `mio.exe`. |
+| `mio.languageServer.enabled` | `true` | Launch the MioCore language server (`mio lsp`). Falls back to `mio check` when disabled or unavailable. |
+| `mio.diagnostics.enabled` | `true` | Enable diagnostics (via LSP when running, or `mio check --format=json` fallback). |
 | `mio.diagnostics.onSave` | `true` | Fallback only: run `mio check` after saving a `.mio` file (350 ms debounce). |
-| `mio.outputDirectory` | `""` | Output directory for `mio build`. Empty writes the `.mochi` file next to the source. Supports `${workspaceFolder}`. |
+| `mio.outputDirectory` | `""` | Output directory for `mio build` (supports `${workspaceFolder}`). Empty writes `.mochi` next to the source. |
+| `mio.editing.smartSnippets` | `true` | Offer context-aware Mio snippets with native `Tab` navigation. |
+| `mio.editing.autoInsertParentheses` | `true` | Insert parentheses and control-flow blocks when accepting smart suggestions. |
+| `mio.editing.autoInsertSemicolon` | `false` | Conservatively insert `;` on `Enter` for complete statements (requires `editor.formatOnType`). |
+| `mio.completion.importPaths` | `true` | Complete `yobu` import paths from the Mio v2.1.2 catalog and local modules. |
+| `mio.completion.bunkoRoots` | `[]` | Additional Bunko library roots (absolute or workspace-relative) for import completion. |
+| `mio.format.enable` | `true` | Enable Mio document formatting. |
+| `mio.format.organizeImports` | `true` | Organize `yobu` imports when formatting with Mio. |
+| `mio.format.executable` | `""` | Custom formatter executable. Empty uses `mio.executablePath` or `PATH`. |
+| `mio.format.timeout` | `10000` | Maximum time in milliseconds to wait for Mio formatting. |
 
-`mio.languageVersion` is intentionally **not** exposed: the current Mio CLI has
-no language-version flag. The grammar and snippets target the V0.5 keyword set
-used by the current toolchain. See the version table below.
+> `mio.languageVersion` is intentionally not exposed because the current Mio CLI has no language-version flag; the grammar and snippets target V0.5.
 
-### Spell checking
+### Recommended Workspace Snippets
 
-When Code Spell Checker (cSpell) is installed, this extension defaults
-`cSpell.enabledFileTypes.mio` to `false` so Mio keywords such as `waza`, `kaku`,
-and `moshi` do not produce `Unknown word` diagnostics in `.mio` files. This
-leaves other file types and all MioCore LSP features (syntax/type diagnostics,
-Hover, completion, and go to definition) unaffected. cSpell is optional; no
-user settings are written, and explicit user or workspace settings take precedence.
-
-To re-enable spell checking for Mio, add this to your user or workspace `settings.json`
-(merge `mio` into any existing `cSpell.enabledFileTypes` object):
-
-```json
-{
-  "cSpell.enabledFileTypes": {
-    "mio": true
-  }
-}
-```
-
-### Bunko standard library
-
-`mio check` and `mio run` need the Bunko root when a file imports `kiso/...`.
-The extension reuses the CLI's lookup rules:
-
-1. `MIO_BUNKO` from the environment, if it points to a directory.
-2. The nearest `bunko/` directory above the source file.
-
-If you keep Bunko outside the project, set `MIO_BUNKO` in the environment that
-launches VS Code.
-
-## Commands
-
-| Command | Palette title | Requires Mio CLI |
-| --- | --- | --- |
-| `mio.checkCurrentFile` | Mio: Check Current File | Fallback only |
-| `mio.runCurrentFile` | Mio: Run Current File | Yes |
-| `mio.buildCurrentFile` | Mio: Build Current File | Yes |
-| `mio.showCompilerVersion` | Mio: Show Compiler Version | Yes |
-| `mio.openOutput` | Mio: Open Output | No |
-| `mioGraph.generateSource` | Mio Graph: Generate Mio Source | No (validation needs it) |
-
-Run and build save a dirty `.mio` buffer first. Manual `Check Current File`
-checks the in-memory text without forcing a save by copying the package's
-`.mio` files to a temporary directory. While the language server is running,
-diagnostics come from `mio lsp`, so the command reports that instead of
-starting a duplicate CLI check.
-
-If the CLI is missing, the extension shows a guidance message with **Open
-Settings** and **Installation Guide** actions. Syntax highlighting and snippets
-continue to work.
-
-## Mio Graph
-
-`.miog` files are Mio Graph blueprints. **Mio Graph: Generate Mio Source**
-compiles the active graph into `<name>.mio` next to it, opens the result, and
-validates it with the configured Mio CLI.
-
-- The graph core in `src/graph` is independent of VS Code: model, validation,
-  semantic analysis, an intermediate representation, and the source generator
-  can be imported and tested without a webview.
-- Phase 1 supports scalar types, constants, variables, arithmetic, comparison
-  and boolean logic, `Branch`, `Sequence`, `Function Call`, `Entry`, and
-  `Return`. Unsupported node types are compile errors; the generator never
-  emits guessed code.
-- Execution order comes only from exec connections, never from node positions
-  or JSON order. Side-effecting calls are evaluated once through stable
-  `__mio_graph_N` temporaries, and ambiguous cross-branch uses are rejected.
-- Existing `.mio` files are only overwritten without confirmation when they
-  start with the `// Generated by Mio Graph` marker. The extension API
-  (`generateMioGraphSource`) defaults to never overwriting.
-- Generated output passes the real `mio check`; the integration tests also run
-  the generated programs and compare stdout.
-
-See [docs/MIO_GRAPH.md](docs/MIO_GRAPH.md) for the file format, node reference,
-type rules, diagnostics, and the React Flow editor plan, and
-[examples/mio-graph](examples/mio-graph) for complete graphs.
-
-## Mio language versions
-
-Keyword gates are copied from `internal/token/token.go`; the current Mio CLI
-loader uses `token.V05` (`internal/bunko/program.go`).
-
-| Version | Added keywords / syntax |
-| --- | --- |
-| V0.1 | `kaku`, `waza`, `moshi`, `sore`, `kaesu`, `hai`, `iie`, `mu` |
-| V0.2 | `aida`, `nukeru`, `tsuzuku` |
-| V0.3 | `yobu` |
-| V0.4 | `kata`, `sentaku`, `awase`, `baai` |
-| V0.5 | `koukai`, `teisu` |
-
-The extension targets V0.5. It does not treat a V0.4-only keyword as valid in a
-V0.1 program because the plugin has no per-file version switch; such a switch
-would require a real CLI flag.
-
-## Current scope
-
-- Syntax highlighting, language configuration, snippets, folding, the MioCore
-  language server, the five CLI commands, and Mio Graph source generation
-  described above.
-- Diagnostics come from `mio lsp`. The server reuses Mio's Lexer, Parser,
-  Resolver, and TypeChecker, analyzes unsaved buffers through an in-memory
-  overlay, applies incremental edits, validates document versions, supports
-  `$/cancelRequest`, and maps compiler byte offsets to UTF-16 positions.
-- The compiler pipeline stops at the first error, so each analysis publishes at
-  most one diagnostic. Package/import failures without a source position are
-  shown at the start of the file with an explicit note instead of a guessed
-  range.
-- When the server is disabled, missing, or stops, the extension falls back to
-  `mio check --format=json` and clears the other diagnostic collection, so the
-  Problems panel never shows both sources at once.
-- Hover, go-to-definition, find references, document symbols, completion, and
-  signature help are provided by `mio lsp` (see the feature list above).
-  Workspace symbols, rename, semantic tokens, formatting, and code actions are
-  **not** implemented: the server does not advertise them and the extension
-  does not register regex-based fake providers. See
-  [docs/LSP_PLAN.md](docs/LSP_PLAN.md).
-- No debugger, formatter command, or Marketplace publication.
-
-## Known limitations
-
-- Both the language server and the CLI fallback stop at the first compiler
-  error; the Problems panel therefore shows at most one Mio diagnostic per
-  analysis.
-- Semantic results require the document and its imports to parse. When a
-  buffer is incomplete, only the successfully parsed statements are indexed;
-  the language server never guesses symbols for the broken fragment.
-- Cross-module references are computed for the current program graph plus other
-  documents open in the workspace. Files that are neither open nor imported are
-  not scanned until they are opened.
-- Completion does not yet offer `baai` match-arm variants or type-parameter
-  names inside type annotations.
-- Import/package errors without a source position are shown at the start of the
-  current file and include the reported file path in the message.
-- Windows `.cmd` / `.bat` launchers are not executed. Configure the native
-  `mio.exe` instead; this keeps process execution shell-free.
-- `mio.outputDirectory` only affects `mio build`; `mio run` always runs the
-  source file.
-- The Marketplace publisher ID is not finalized. See
-  [PUBLISHING.md](PUBLISHING.md).
-
-## Development
-
-```bash
-npm ci
-npm run compile
-npm run lint
-npm test
-npx vsce package
-npm run check:vsix
-```
-
-`npm test` first runs Node-based unit tests (manifest, grammar scopes,
-diagnostics mapping, CLI resolution, process runner, language server launch
-options), then launches a VS Code Extension Host through `@vscode/test-electron`
-for activation, language ID, command registration, snippets, folding,
-language-server diagnostics, CLI fallback, missing-CLI, and
-space/Chinese/Japanese path tests.
-
-The `pretest` step builds `cmd/mio` from the fixed core SHA in
-`core-source.json` into `.test-tmp/`. Git and Go are required for tests:
-a missing tool or failed build fails the tests. The installed extension itself
-has no Go dependency.
-
-## License and artwork
-
-The plugin code is MIT-licensed; see [LICENSE](LICENSE). The icon is a 128×128
-RGBA conversion of the JetBrains Marketplace icon
-`assets/pluginIcon-source.svg` (using its
-embedded PNG artwork), not the `icons/mio.svg` file-type mark. Other Mio/Mochi
-character illustrations under `assets/mascot/` are **not** bundled because
-their license is separate from the MIT-licensed code. See
-[NOTICE.md](NOTICE.md).
-
-## Links
-
-- [Mio repository](https://github.com/mio-kobo/mio)
-- [Mio language reference](https://github.com/mio-kobo/mio/blob/Mio-2/docs/LANGUAGE.md)
-- [Bunko standard library](https://github.com/mio-kobo/mio/blob/Mio-2/docs/BUNKO.md)
-- [JetBrains Mio — Programming Language Tools](https://github.com/mio-kobo/mio-jetbrains)
-- [Issue tracker](https://github.com/mio-kobo/mio/issues)
-
-
-## 独立仓库开发与发布
-
-见 [MIGRATION.md](MIGRATION.md)。测试需要真实 CLI，不允许因缺少 Go 跳过 LSP 测试。VS Code 测试 CLI 来自 core-source.json 固定 SHA 的独立临时克隆，构建失败即测试失败。核心仓库现位于 `mio-kobo/mio`；现有 Marketplace 版本与用户设置保持不变。
-
-## Smart editing (v0.3.1)
-
-Compatible with the released Mio **v2.1.2**; these are editor conveniences and
-make no changes to Mio syntax or compiler behavior.
-
-Accept `moshi` or `aida` completion to insert a condition and an indented block.
-The condition is selected first; **Tab** enters the body, another Tab exits,
-and **Shift+Tab** moves back. Accept `chant` to insert `chant();` or `len` to
-insert `len()` with the cursor inside the parentheses. Native snippet undo/redo
-and bracket handling apply. Existing parentheses and blocks are preserved.
-Expansion happens on accepting completion, not on every Space keystroke.
-
-Numeric conversions (`int8`–`int64`, `uint8`–`uint32`, `float32`, `float64`,
-`rune`) gain parentheses in clear expression positions such as `kaku x = uint8`.
-Type annotations, arrays, and generic type arguments keep plain type names.
-The requested `uint64` conversion is omitted: the pinned v2.1.2 compiler reports
-`E0201` for `uint64(1)` and its native type system has no Uint64. No new compiler
-type is introduced by this extension. Comments, ordinary strings, identifier interiors, and ambiguous contexts do not
-receive smart transformations. Local smart transformations decline multiple cursors.
-Other snippet aliases (`if`, `while`, `print`, `array-len`, `rune-literal`) remain
-available from the snippet picker.
-
-Inside `yobu "…"`, completion offers roots and module paths, including partial
-and nested paths. The extension uses a catalog verified against Mio Full v2.1.2
-embedded resources, plus workspace directories containing non-test `.mio` files
-and configured Bunko roots. It never downloads packages. An async bounded index
-refreshes on module creation/deletion, root settings and workspace changes;
-completion uses its last snapshot while refreshing. The catalog describes Full;
-Core installations need a matching external Bunko tree. Workspace candidates are
-relative to their indexed root; the compiler's import resolution remains authoritative.
-
-| Setting | Default | Behavior |
-| --- | --- | --- |
-| `mio.editing.smartSnippets` | `true` | Context-aware snippet suggestions |
-| `mio.editing.autoInsertParentheses` | `true` | Parentheses and control-flow blocks when accepting suggestions |
-| `mio.editing.autoInsertSemicolon` | `false` | Conservative semicolon insertion on Enter |
-| `mio.completion.importPaths` | `true` | Local import-path suggestions |
-| `mio.completion.bunkoRoots` | `[]` | Extra installed library roots, absolute or workspace-relative |
-
-Semicolon insertion also requires VS Code's native on-type formatting. Opt in
-for Mio yourself (the extension never changes global editor settings):
-
-```json
-{
-  "mio.editing.autoInsertSemicolon": true,
-  "[mio]": { "editor.formatOnType": true }
-}
-```
-
-Enter keeps its normal indentation and cursor behavior. Complete declarations,
-returns, imports and simple calls can gain `;` before a trailing comment.
-Incomplete/complex syntax, multiline expressions, block headers/closing braces,
-existing semicolons, multiple cursors, and paste operations are skipped.
-VS Code controls undo grouping: on some versions, undo first removes the
-formatting edit and a second undo removes Enter. Semicolons remain required by Mio.
-
-If diagnostics appear stale, check the Mio output channel and the configured
-CLI path. A running LSP owns live unsaved-buffer diagnostics; when unavailable,
-CLI fallback runs on save or **Mio: Check Current File**, using an unsaved-buffer
-snapshot for manual checks. Editing cancels stale fallback checks; save again to
-revalidate. Versioned stale LSP responses and results for closed documents are
-discarded; successful validation clears errors. An incomplete `yobu` can still
-legitimately produce `E0101` until it is completed. No compiler error code is
-suppressed. Unversioned server notifications cannot be reliably matched to their
-originating edit; extension changes cannot remove MioCore analysis/debounce latency.
-
-See [validation and measurements](docs/RELEASE-0.3.1.md) for reproducible tests,
-performance results, and implementation limits.
-
-### Formatting and imports
-
-Install a Mio CLI with `mio fmt` support. The extension uses the executable
-from `mio.format.executable`, `mio.executablePath`, or PATH. **Format Document**
-uses the current editor contents, including unsaved changes. Use the usual
-Shift+Option+F on macOS or Shift+Alt+F on Windows and Linux.
-
-With the Mio language server running, accepting an unambiguous package member
-completion can add its `yobu` declaration. Use **Mio: Organize Imports**
-(Shift+Option+O on macOS or Shift+Alt+O on Windows and Linux) to run the
-language server's source action. **Mio: Check Formatting** checks the current
-buffer and **Mio: Restart Language Server** restarts the service.
-
-To opt in to save-time edits, add these settings to your workspace:
+#### Format & Organize Imports on Save
 
 ```json
 {
@@ -438,5 +154,121 @@ To opt in to save-time edits, add these settings to your workspace:
 }
 ```
 
-Set `mio.format.organizeImports` to `false` to make Format Document change
-only whitespace. The standalone Organize Imports action is still available.
+Set `mio.format.organizeImports` to `false` if you want **Format Document** to adjust whitespace only.
+
+#### Auto-Insert Semicolons on Enter
+
+Semicolon insertion on `Enter` requires VS Code's native on-type formatting:
+
+```json
+{
+  "mio.editing.autoInsertSemicolon": true,
+  "[mio]": {
+    "editor.formatOnType": true
+  }
+}
+```
+
+#### Spell Checking (cSpell)
+
+When Code Spell Checker (`cSpell`) is installed, this extension defaults `cSpell.enabledFileTypes.mio` to `false` so Mio keywords like `waza` and `kaku` do not trigger false `Unknown word` warnings. To re-enable it, set `"mio": true` inside `cSpell.enabledFileTypes` in your `settings.json`.
+
+---
+
+## Commands
+
+| Command ID | Palette Title | Shortcut | Requires CLI |
+| --- | --- | --- | --- |
+| `mio.checkCurrentFile` | Mio: Check Current File | — | Fallback only |
+| `mio.runCurrentFile` | Mio: Run Current File | — | Yes |
+| `mio.buildCurrentFile` | Mio: Build Current File | — | Yes |
+| `mio.formatDocument` | Mio: Format Document | `Shift+Alt+F` / `Shift+Option+F` | Yes (`mio fmt`) |
+| `mio.organizeImports` | Mio: Organize Imports | `Shift+Alt+O` / `Shift+Option+O` | Yes (LSP) |
+| `mio.checkFormatting` | Mio: Check Formatting | — | Yes (`mio fmt`) |
+| `mio.showCompilerVersion` | Mio: Show Compiler Version | — | Yes |
+| `mio.restartLanguageServer` | Mio: Restart Language Server | — | Yes (LSP) |
+| `mio.openOutput` | Mio: Open Output | — | No |
+| `mioGraph.generateSource` | Mio Graph: Generate Mio Source | — | No (validation needs CLI) |
+
+- **Run** and **Build** save dirty `.mio` buffers before executing.
+- **Check Current File** checks unsaved buffer text in a temporary package copy without forcing a save (when LSP is running, it reports that live diagnostics are already active).
+- If the CLI is missing, the extension displays a prompt with **Open Settings** and **Installation Guide** actions.
+
+---
+
+## Mio Graph (`.miog`)
+
+`.miog` files are Mio Graph blueprints. Running **Mio Graph: Generate Mio Source** compiles the active graph into `<name>.mio` beside it, opens the generated file, and validates it with the Mio CLI.
+
+- **Headless Core**: `src/graph` (model, validation, semantic analysis, IR, and code generator) has no VS Code dependency.
+- **Deterministic Execution**: Execution order follows `exec` connections rather than node coordinates or JSON order. Side-effecting calls are evaluated once via `__mio_graph_N` temporaries.
+- **Safe Overwrite**: Existing `.mio` files are only overwritten without confirmation if they begin with `// Generated by Mio Graph`.
+
+See [docs/MIO_GRAPH.md](docs/MIO_GRAPH.md) for the specification and [examples/mio-graph](examples/mio-graph) for sample graphs.
+
+---
+
+## Smart Editing Details (v0.3.1)
+
+- **Control Flow & Calls**: Accepting `moshi` or `aida` inserts a condition and indented block with native `Tab` / `Shift+Tab` navigation. Accepting `chant` or `len` inserts `chant();` / `len()` with the cursor inside parentheses. Existing parentheses/blocks are preserved, and snippet aliases (`if`, `while`, `print`, `array-len`, `rune-literal`) remain available.
+- **Numeric Conversions**: `int8`–`int64`, `uint8`–`uint32`, `float32`, `float64`, and `rune` gain `()` in expression positions (e.g., `kaku x = uint8`), while type annotations, arrays, and generic type arguments stay plain. `uint64` conversion is omitted because the pinned Mio v2.1.2 compiler reports `E0201` for `uint64(1)`.
+- **Diagnostics Freshness**: Stale versioned LSP responses and results for closed documents are discarded. When using CLI fallback, new edits cancel pending checks. Incomplete statements (like a partial `yobu`) still legitimately report compiler errors such as `E0101` until completed.
+
+See [docs/RELEASE-0.3.1.md](docs/RELEASE-0.3.1.md) for validation tests, performance measurements, and implementation limits.
+
+---
+
+## Language Versions
+
+Keyword gates come from `internal/token/token.go`; the current Mio CLI uses `token.V05` (`internal/bunko/program.go`):
+
+| Version | Added Keywords / Syntax |
+| --- | --- |
+| V0.1 | `kaku`, `waza`, `moshi`, `sore`, `kaesu`, `hai`, `iie`, `mu` |
+| V0.2 | `aida`, `nukeru`, `tsuzuku` |
+| V0.3 | `yobu` |
+| V0.4 | `kata`, `sentaku`, `awase`, `baai` |
+| V0.5 | `koukai`, `teisu` |
+
+---
+
+## Known limitations
+
+- **Single Diagnostic per Analysis**: Both `mio lsp` and `mio check` stop at the first compiler error, so the Problems panel displays at most one Mio diagnostic per analysis.
+- **Partial Buffers & Cross-Module Indexing**: Semantic navigation requires parsable statements; broken fragments are not guessed. Cross-module references cover the active program graph and open workspace documents.
+- **Completion Scope**: Completion does not yet offer `baai` match-arm variants or type-parameter names inside type annotations.
+- **Unsupported LSP Capabilities**: Workspace symbols, rename, and semantic tokens are not yet implemented (see [docs/LSP_PLAN.md](docs/LSP_PLAN.md)).
+- **No Debugger**: Debugging (including debugging from Test Explorer) is not available.
+- **Windows Launchers**: `.cmd` / `.bat` wrappers are not executed; configure a native `mio.exe` to keep process execution shell-free.
+- **Output Directory**: `mio.outputDirectory` applies only to `mio build`; `mio run` always executes the source file.
+
+---
+
+## Development & Testing
+
+```bash
+npm ci
+npm run compile
+npm run lint
+npm test
+npx vsce package
+npm run check:vsix
+```
+
+- `npm test` runs Node unit tests (manifest, grammar scopes, diagnostics mapping, CLI resolution, process runner, LSP options) followed by VS Code Extension Host integration tests via `@vscode/test-electron`.
+- `pretest` clones and builds `cmd/mio` from the pinned core SHA in `core-source.json` into `.test-tmp/` (**Git and Go are required** to run tests; missing tools or build failures fail the suite). The packaged extension itself has no Go dependency.
+- See [MIGRATION.md](MIGRATION.md) for standalone repository development and publishing notes.
+
+---
+
+## License & Artwork
+
+Extension code is licensed under the [MIT License](LICENSE). The extension icon is a 128×128 RGBA conversion of `assets/pluginIcon-source.svg`. Character illustrations under `assets/mascot/` are **not** bundled due to separate licensing terms; see [NOTICE.md](NOTICE.md).
+
+## Links
+
+- [Mio Repository](https://github.com/mio-kobo/mio)
+- [Mio Language Reference](https://github.com/mio-kobo/mio/blob/Mio-2/docs/LANGUAGE.md)
+- [Bunko Standard Library](https://github.com/mio-kobo/mio/blob/Mio-2/docs/BUNKO.md)
+- [JetBrains Mio — Programming Language Tools](https://github.com/mio-kobo/mio-jetbrains)
+- [Issue Tracker](https://github.com/mio-kobo/mio/issues)
