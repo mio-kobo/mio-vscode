@@ -320,3 +320,30 @@ LSP 响应及已关闭文档的结果会被丢弃，检查成功后清除错误�
 合法地触发 `E0101`，补全语句后会重新验证；扩展不会屏蔽任何编译器错误代码。
 不带版本号的服务器通知无法可靠关联到原始编辑；扩展无法消除 MioCore 自身的分析或
 防抖延迟。详见 [验证与性能记录](docs/RELEASE-0.3.1.md)。
+
+### 格式化和导入
+
+安装支持 `mio fmt` 的 Mio CLI。扩展优先使用 `mio.format.executable`，其次使用
+`mio.executablePath` 或 PATH。格式化读取编辑器中的当前内容，包括未保存的修改。
+macOS 使用 Shift+Option+F，Windows 和 Linux 使用 Shift+Alt+F。
+
+启用 Mio 语言服务器后，接受无歧义的包成员补全可以插入 `yobu`。使用
+**Mio: 整理导入**（macOS 为 Shift+Option+O，Windows 和 Linux 为 Shift+Alt+O）
+执行标准整理导入操作。
+
+在工作区设置中添加以下配置即可启用保存时格式化和整理。
+
+```json
+{
+  "[mio]": {
+    "editor.defaultFormatter": "exmikupro.mio-language-support",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"
+    }
+  }
+}
+```
+
+把 `mio.format.organizeImports` 设为 `false` 可以让格式化只调整空白。
+独立的整理导入命令仍可使用。

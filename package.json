@@ -8,6 +8,13 @@
   "engines": {
     "vscode": "^1.85.0"
   },
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "%mio.workspaceTrust.description%",
+      "restrictedConfigurations": ["mio.executablePath", "mio.format.executable"]
+    }
+  },
   "categories": [
     "Programming Languages",
     "Linters"
@@ -150,6 +157,31 @@
           "default": [],
           "scope": "resource",
           "description": "%mio.configuration.completion.bunkoRoots.description%"
+        },
+        "mio.format.enable": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "description": "%mio.format.enable.description%"
+        },
+        "mio.format.organizeImports": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "description": "%mio.format.organizeImports.description%"
+        },
+        "mio.format.executable": {
+          "type": "string",
+          "default": "",
+          "scope": "machine-overridable",
+          "description": "%mio.format.executable.description%"
+        },
+        "mio.format.timeout": {
+          "type": "number",
+          "default": 10000,
+          "scope": "resource",
+          "description": "%mio.format.timeout.description%",
+          "minimum": 1
         }
       }
     },
@@ -187,6 +219,30 @@
         "title": "%mio.command.graph.generate.title%",
         "category": "Mio Graph",
         "enablement": "editorLangId == mio-graph"
+      },
+      {
+        "command": "mio.formatDocument",
+        "title": "%mio.command.formatDocument.title%",
+        "category": "Mio",
+        "enablement": "editorLangId == mio"
+      },
+      {
+        "command": "mio.organizeImports",
+        "title": "%mio.command.organizeImports.title%",
+        "category": "Mio",
+        "enablement": "editorLangId == mio"
+      },
+      {
+        "command": "mio.checkFormatting",
+        "title": "%mio.command.checkFormatting.title%",
+        "category": "Mio",
+        "enablement": "editorLangId == mio"
+      },
+      {
+        "command": "mio.restartLanguageServer",
+        "title": "%mio.command.restartLanguageServer.title%",
+        "category": "Mio",
+        "enablement": "editorLangId == mio"
       }
     ],
     "menus": {
@@ -212,6 +268,22 @@
         {
           "command": "mioGraph.generateSource",
           "when": "editorLangId == mio-graph"
+        },
+        {
+          "command": "mio.formatDocument",
+          "when": "editorLangId == mio"
+        },
+        {
+          "command": "mio.organizeImports",
+          "when": "editorLangId == mio"
+        },
+        {
+          "command": "mio.checkFormatting",
+          "when": "editorLangId == mio"
+        },
+        {
+          "command": "mio.restartLanguageServer",
+          "when": "editorLangId == mio"
         }
       ],
       "editor/context": [
@@ -236,7 +308,15 @@
           "group": "mio@4"
         }
       ]
-    }
+    },
+    "keybindings": [
+      {
+        "command": "mio.organizeImports",
+        "key": "shift+alt+o",
+        "mac": "shift+alt+o",
+        "when": "editorLangId == mio && editorTextFocus"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

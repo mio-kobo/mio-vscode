@@ -1,4 +1,5 @@
 {
+  "mio.workspaceTrust.description": "Executable paths set by the workspace require trust.",
   "mio.configuration.title": "Mio",
   "mio.configuration.executablePath.description": "Absolute path to the Mio CLI. Leave empty to search for mio/mio.exe on PATH.",
   "mio.configuration.diagnostics.enabled.description": "Show diagnostics. The MioCore language server provides them while it is running; otherwise the Mio CLI check command is used as a fallback.",
@@ -15,5 +16,13 @@
   "mio.configuration.editing.autoInsertParentheses.description": "Insert parentheses and blocks when accepting Mio smart snippets.",
   "mio.configuration.editing.autoInsertSemicolon.description": "Insert semicolons on Enter for confidently complete statements. Also requires editor.formatOnType for Mio.",
   "mio.configuration.completion.importPaths.description": "Complete yobu import paths from the Mio v2.1.2 catalog and local modules.",
-  "mio.configuration.completion.bunkoRoots.description": "Additional installed Bunko roots for import completion, absolute or relative to the workspace folder."
+  "mio.configuration.completion.bunkoRoots.description": "Additional installed Bunko roots for import completion, absolute or relative to the workspace folder.",
+  "mio.format.enable.description": "Enable Mio document formatting.",
+  "mio.format.organizeImports.description": "Organize yobu imports when formatting with Mio.",
+  "mio.format.executable.description": "Formatter executable. Leave empty to use the configured Mio CLI or PATH.",
+  "mio.format.timeout.description": "Maximum time in milliseconds to wait for Mio formatting.",
+  "mio.command.formatDocument.title": "Format Document",
+  "mio.command.organizeImports.title": "Organize Imports",
+  "mio.command.checkFormatting.title": "Check Formatting",
+  "mio.command.restartLanguageServer.title": "Restart Language Server"
 }

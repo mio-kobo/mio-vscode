@@ -12,6 +12,7 @@ export interface ProcessRunOptions {
   timeoutMs?: number;
   token?: CancellationLike | undefined;
   maxOutputBytes?: number;
+  input?: string;
 }
 
 export interface ProcessRunResult {
@@ -55,7 +56,7 @@ export class ProcessRunner {
           env: options.env === undefined ? process.env : { ...process.env, ...options.env },
           shell: false,
           windowsHide: true,
-          stdio: ['ignore', 'pipe', 'pipe'],
+          stdio: [options.input === undefined ? 'ignore' : 'pipe', 'pipe', 'pipe'],
         });
       } catch (error) {
         reject(this.startError(executable, error));
@@ -133,6 +134,21 @@ export class ProcessRunner {
         cleanup();
         reject(this.startError(executable, error));
       });
+
+      child.stdin?.on('error', (error: NodeJS.ErrnoException) => {
+        // A CLI rejecting arguments can close stdin before it reports stderr.
+        if (error.code === 'EPIPE' || error.code === 'ERR_STREAM_DESTROYED' || settled || cancelled || timedOut) { return; }
+        settled = true;
+        cleanup();
+        this.terminate(child);
+        reject(new ProcessRunError(`Failed to write to Mio CLI stdin: ${error.message}`, error.code, error));
+      });
+      if (options.token?.isCancellationRequested) {
+        cancelled = true;
+        this.terminate(child);
+      } else {
+        child.stdin?.end(options.input);
+      }
 
       child.once('close', (code, signal) => {
         if (settled) {
