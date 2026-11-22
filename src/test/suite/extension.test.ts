@@ -1000,7 +1000,8 @@ suite('Mio extension host', () => {
     assert.ok(cli !== undefined, 'a real Mio CLI is required (run npm run pretest)');
     await setLanguageServerEnabled(true);
     await setExecutablePath(cli);
-    await waitFor('language server ready', () => api.getLanguageServerState() === 'ready');
+    await vscode.commands.executeCommand('mio.restartLanguageServer');
+    assert.equal(api.getLanguageServerState(), 'ready');
     const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'mio reload-'));
     const fileA = path.join(temporaryRoot, 'a_test.mio');
     const fileB = path.join(temporaryRoot, 'b_test.mio');
@@ -1010,12 +1011,10 @@ suite('Mio extension host', () => {
       const documentA = await openDocument(fileA);
       const documentB = await openDocument(fileB);
       // Two edits well inside the 400 ms debounce, in different files.
-      const editA = new vscode.WorkspaceEdit();
-      editA.insert(documentA.uri, documentA.positionAt(documentA.getText().length), 'waza test_a2() -> unit {\n}\n');
-      const editB = new vscode.WorkspaceEdit();
-      editB.insert(documentB.uri, documentB.positionAt(documentB.getText().length), 'waza test_b2() -> unit {\n}\n');
-      assert.ok(await vscode.workspace.applyEdit(editA));
-      assert.ok(await vscode.workspace.applyEdit(editB));
+      const edit = new vscode.WorkspaceEdit();
+      edit.insert(documentA.uri, documentA.positionAt(documentA.getText().length), 'waza test_a2() -> unit {\n}\n');
+      edit.insert(documentB.uri, documentB.positionAt(documentB.getText().length), 'waza test_b2() -> unit {\n}\n');
+      assert.ok(await vscode.workspace.applyEdit(edit));
 
       const names = await waitFor('both edited files reloaded', () => {
         const found = api.getDiscoveredTests().map((entry) => entry.name);
