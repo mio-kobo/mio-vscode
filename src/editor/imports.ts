@@ -3,6 +3,11 @@ import * as vscode from 'vscode';
 import { relativeModuleDirectory } from '../util/paths';
 import { embeddedModules } from './moduleCatalog';
 
+/** Mirrors the compiler's validateImportPath rule for the "bunko" first segment. */
+export function isPhysicalBunkoPath(importPath: string): boolean {
+  return importPath === 'bunko' || importPath.startsWith('bunko/');
+}
+
 /** One bounded, coalesced asynchronous refresh; completion reads the last snapshot. */
 export class ImportIndex implements vscode.Disposable {
   private modules = new Set(embeddedModules);
@@ -70,7 +75,10 @@ export class ImportIndex implements vscode.Disposable {
             file.scheme === 'file' ? file.fsPath : file.path,
             root.scheme === 'file' && process.platform === 'win32',
           );
-          if (relative) { modules.add(relative); }
+          // The compiler rejects import paths whose first segment is "bunko"
+          // ("exposes the physical root"); the workspace root also covers the
+          // bunko/ directory, so never offer those spellings.
+          if (relative && !isPhysicalBunkoPath(relative)) { modules.add(relative); }
         }
       }
     }

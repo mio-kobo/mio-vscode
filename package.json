@@ -40,6 +40,7 @@
     "onCommand:mio.buildCurrentFile",
     "onCommand:mio.showCompilerVersion",
     "onCommand:mio.openOutput",
+    "onCommand:mio.restartLanguageServer",
     "onCommand:mioGraph.generateSource"
   ],
   "contributes": {
@@ -183,6 +184,11 @@
         "category": "Mio"
       },
       {
+        "command": "mio.restartLanguageServer",
+        "title": "%mio.command.restartLanguageServer.title%",
+        "category": "Mio"
+      },
+      {
         "command": "mioGraph.generateSource",
         "title": "%mio.command.graph.generate.title%",
         "category": "Mio Graph",
@@ -208,6 +214,9 @@
         },
         {
           "command": "mio.openOutput"
+        },
+        {
+          "command": "mio.restartLanguageServer"
         },
         {
           "command": "mioGraph.generateSource",

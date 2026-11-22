@@ -133,6 +133,24 @@ suite('Native smart editing', () => {
       assert.ok(!provider.imports.candidates('本地/').length);
     } finally { provider.dispose(); }
   });
+  test('a workspace bunko/ offers bunko-relative paths, never the rejected bunko/… spelling', async () => {
+    const provider = new MioCompletionProvider();
+    const folder = vscode.workspace.workspaceFolders![0].uri;
+    const bunko = vscode.Uri.joinPath(folder, 'bunko');
+    const file = vscode.Uri.joinPath(bunko, '自作', 'module.mio');
+    try {
+      await vscode.workspace.fs.createDirectory(vscode.Uri.joinPath(bunko, '自作'));
+      await vscode.workspace.fs.writeFile(file, Buffer.from('koukai waza value() -> int64 { kaesu 1; }'));
+      await delay(300);
+      await provider.imports.refresh();
+      assert.ok(provider.imports.candidates('自作').includes('自作'));
+      // The compiler rejects these ("exposes the physical root").
+      assert.deepEqual(provider.imports.candidates('bunko'), []);
+    } finally {
+      provider.dispose();
+      await vscode.workspace.fs.delete(bunko, { recursive: true });
+    }
+  });
   test('configured external Bunko roots and unavailable roots', async () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'mio-import-'));
     const packagePath = path.join(root, '外部', 'module');

@@ -24,7 +24,8 @@ import {
 
 interface Runtime {
   readonly output: vscode.OutputChannel;
-  dispose(): void;
+  // Resolves when the language server has been shut down.
+  dispose(): Promise<void>;
 }
 
 let runtime: Runtime | undefined;
@@ -114,6 +115,15 @@ export async function activate(
     vscode.commands.registerCommand('mio.openOutput', () =>
       commands.openOutput(),
     ),
+    // Recover after installing Mio, a crash that exhausted automatic restarts,
+    // or any other failed/stopped state without reloading the window.
+    vscode.commands.registerCommand(
+      'mio.restartLanguageServer',
+      guard(async () => {
+        cli.invalidate();
+        await languageClient.restart(context);
+      }),
+    ),
     vscode.commands.registerCommand(
       'mioGraph.generateSource',
       guard(() => graphCommands.generateFromActiveEditor()),
@@ -167,36 +177,38 @@ export async function activate(
       }
     });
 
-  let disposed = false;
-  const disposable: vscode.Disposable = {
-    dispose: () => {
-      if (disposed) {
-        return;
-      }
-      disposed = true;
-      changeListener.dispose();
-      for (const item of editing) { item.dispose(); }
-      saveListener.dispose();
-      closeListener.dispose();
-      tabListener.dispose();
-      configurationListener.dispose();
-      languageStateListener.dispose();
-      folding.dispose();
-      tests.dispose();
-      for (const command of commandDisposables) {
-        command.dispose();
-      }
-      languageClient.dispose();
-      graphCommands.dispose();
-      diagnostics.dispose();
-      cli.dispose();
-      runner.dispose();
-      output.dispose();
-    },
+  let stopped: Promise<void> | undefined;
+  const shutdown = (): Promise<void> => {
+    if (stopped !== undefined) {
+      return stopped;
+    }
+    // Start the server shutdown first; the remaining resources are released
+    // synchronously. The OutputChannel proxy in MioLanguageClient tolerates
+    // late writes after output.dispose().
+    stopped = languageClient.disposeAsync();
+    changeListener.dispose();
+    for (const item of editing) { item.dispose(); }
+    saveListener.dispose();
+    closeListener.dispose();
+    tabListener.dispose();
+    configurationListener.dispose();
+    languageStateListener.dispose();
+    folding.dispose();
+    tests.dispose();
+    for (const command of commandDisposables) {
+      command.dispose();
+    }
+    graphCommands.dispose();
+    diagnostics.dispose();
+    cli.dispose();
+    runner.dispose();
+    output.dispose();
+    return stopped;
   };
+  const disposable: vscode.Disposable = { dispose: () => { void shutdown(); } };
 
   context.subscriptions.push(disposable);
-  runtime = { output, dispose: () => disposable.dispose() };
+  runtime = { output, dispose: shutdown };
 
   const api: MioExtensionApi = {
     outputChannel: output,
@@ -221,7 +233,10 @@ export async function activate(
   return api;
 }
 
-export function deactivate(): void {
-  runtime?.dispose();
+// Returning the promise lets VS Code wait for the language server to receive
+// shutdown/exit (vscode-languageclient's recommended deactivate pattern).
+export function deactivate(): Promise<void> | undefined {
+  const current = runtime;
   runtime = undefined;
+  return current?.dispose();
 }

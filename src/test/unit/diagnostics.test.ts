@@ -146,6 +146,36 @@ suite('diagnostics parser', () => {
     );
   });
 
+  test('never maps a same-named file from another directory onto the document', () => {
+    // Saved-file check: the map is the identity, so no name matching applies.
+    const saved = new Map([['/p/app/main.mio', '/p/app/main.mio']]);
+    assert.equal(
+      mapDiagnosticPath('/p/lib/main.mio', saved, '/p/app/main.mio'),
+      '/p/lib/main.mio',
+    );
+    // Temporary package: only paths inside the package may match by name.
+    const temporary = new Map([['/tmp/mio-check-1/main.mio', '/p/app/main.mio']]);
+    assert.equal(
+      mapDiagnosticPath('/p/lib/main.mio', temporary, '/tmp/mio-check-1/main.mio'),
+      '/p/lib/main.mio',
+    );
+    assert.equal(
+      mapDiagnosticPath('/tmp/mio-check-1/sub/main.mio', temporary, '/tmp/mio-check-1/main.mio'),
+      '/p/app/main.mio',
+    );
+  });
+
+  test('maps canonical (macOS /private/var style) spellings recorded in the map', () => {
+    const map = new Map([
+      ['/var/folders/x/mio-check-1/a.mio', '/p/a.mio'],
+      ['/private/var/folders/x/mio-check-1/a.mio', '/p/a.mio'],
+    ]);
+    assert.equal(
+      mapDiagnosticPath('/private/var/folders/x/mio-check-1/a.mio', map, '/var/folders/x/mio-check-1/a.mio'),
+      '/p/a.mio',
+    );
+  });
+
   test('compares normalized paths', () => {
     assert.equal(
       isSameDocumentPath('/project/a/../a/source.mio', '/project/a/source.mio'),

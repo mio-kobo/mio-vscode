@@ -45,6 +45,14 @@ export interface CheckResult {
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 
+async function realpathOrSelf(value: string): Promise<string> {
+  try {
+    return await fs.promises.realpath(value);
+  } catch {
+    return value;
+  }
+}
+
 // 运行 mio check。脏文档会复制当前目录的 .mio 文件到临时包，只替换当前文件内容。
 export async function runMioCheck(request: CheckRequest): Promise<CheckResult> {
   const pathMap = new Map<string, string>();
@@ -53,9 +61,22 @@ export async function runMioCheck(request: CheckRequest): Promise<CheckResult> {
 
   try {
     if (request.useTempPackage) {
-      temporaryDirectory = await fs.promises.mkdtemp(
+      const temporary = await fs.promises.mkdtemp(
         path.join(os.tmpdir(), 'mio-check-'),
       );
+      temporaryDirectory = temporary;
+      // macOS tmpdir sits behind the /var -> /private/var symlink and the CLI
+      // may report canonical paths. The directory is deleted before diagnostics
+      // are converted, so record both spellings while it still exists.
+      const canonical = await realpathOrSelf(temporary);
+      const mapTemporary = (name: string, original: string): string => {
+        const target = path.join(temporary, name);
+        pathMap.set(target, original);
+        if (canonical !== temporary) {
+          pathMap.set(path.join(canonical, name), original);
+        }
+        return target;
+      };
       const sourceDirectory = path.dirname(request.filePath);
       const baseName = path.basename(request.filePath);
       const entries = await fs.promises.readdir(sourceDirectory, {
@@ -71,20 +92,22 @@ export async function runMioCheck(request: CheckRequest): Promise<CheckResult> {
           continue;
         }
         const original = path.join(sourceDirectory, entry.name);
-        const target = path.join(temporaryDirectory, entry.name);
-        await fs.promises.copyFile(original, target);
-        pathMap.set(target, original);
+        await fs.promises.copyFile(original, mapTemporary(entry.name, original));
       }
 
-      checkedPath = path.join(temporaryDirectory, baseName);
+      checkedPath = mapTemporary(baseName, request.filePath);
       await fs.promises.writeFile(
         checkedPath,
         request.documentText,
         'utf8',
       );
-      pathMap.set(checkedPath, request.filePath);
     } else {
       pathMap.set(checkedPath, checkedPath);
+      // A symlinked workspace may be reported by its canonical path.
+      const canonical = await realpathOrSelf(checkedPath);
+      if (canonical !== checkedPath) {
+        pathMap.set(canonical, checkedPath);
+      }
     }
 
     const timeoutMs = request.timeoutMs ?? DEFAULT_TIMEOUT_MS;

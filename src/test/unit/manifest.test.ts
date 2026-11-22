@@ -174,6 +174,7 @@ suite('extension manifest', () => {
       'mio.buildCurrentFile',
       'mio.checkCurrentFile',
       'mio.openOutput',
+      'mio.restartLanguageServer',
       'mio.runCurrentFile',
       'mio.showCompilerVersion',
       'mioGraph.generateSource',

@@ -293,13 +293,21 @@ export function mapDiagnosticPath(
   if (payloadPath === undefined || payloadPath === '') {
     return checkedPath;
   }
-  const direct = pathMap.get(payloadPath);
+  const resolved = path.resolve(payloadPath);
+  const direct = pathMap.get(payloadPath) ?? pathMap.get(resolved);
   if (direct !== undefined) {
     return direct;
   }
-  const base = path.basename(payloadPath);
+  // Name-based matching is only valid inside a temporary check package (an
+  // entry whose key differs from its original). A same-named file in any other
+  // directory is a different file and keeps its reported path.
+  const base = path.basename(resolved);
   for (const [temporary, original] of pathMap) {
-    if (path.basename(temporary) === base) {
+    if (temporary === original || path.basename(temporary) !== base) {
+      continue;
+    }
+    const root = path.resolve(path.dirname(temporary));
+    if (resolved.startsWith(root + path.sep)) {
       return original;
     }
   }

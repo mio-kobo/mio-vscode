@@ -43,7 +43,7 @@ export interface TestControllerDependencies {
 export class MioTestController implements vscode.Disposable {
   private readonly controller: vscode.TestController;
   private readonly disposables: vscode.Disposable[] = [];
-  private refreshTimer: NodeJS.Timeout | undefined;
+  private readonly reloadTimers = new Map<string, NodeJS.Timeout>();
 
   constructor(private readonly deps: TestControllerDependencies) {
     this.controller = vscode.tests.createTestController('mio', 'Mio');
@@ -116,9 +116,10 @@ export class MioTestController implements vscode.Disposable {
   }
 
   dispose(): void {
-    if (this.refreshTimer !== undefined) {
-      clearTimeout(this.refreshTimer);
+    for (const timer of this.reloadTimers.values()) {
+      clearTimeout(timer);
     }
+    this.reloadTimers.clear();
     for (const disposable of this.disposables) {
       disposable.dispose();
     }
@@ -151,14 +152,22 @@ export class MioTestController implements vscode.Disposable {
     return item;
   }
 
+  // Debounced per file: a change to one test file must not cancel a pending
+  // reload of another.
   private scheduleReload(uri: vscode.Uri): void {
-    if (this.refreshTimer !== undefined) {
-      clearTimeout(this.refreshTimer);
+    const key = uri.toString();
+    const pending = this.reloadTimers.get(key);
+    if (pending !== undefined) {
+      clearTimeout(pending);
     }
-    this.refreshTimer = setTimeout(() => {
-      const item = this.upsertFile(uri);
-      void this.loadTests(item);
-    }, REFRESH_DEBOUNCE_MS);
+    this.reloadTimers.set(
+      key,
+      setTimeout(() => {
+        this.reloadTimers.delete(key);
+        const item = this.upsertFile(uri);
+        void this.loadTests(item);
+      }, REFRESH_DEBOUNCE_MS),
+    );
   }
 
   private async loadTests(item: vscode.TestItem): Promise<void> {
