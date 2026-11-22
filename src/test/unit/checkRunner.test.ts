@@ -68,6 +68,7 @@ suite('mio check path mapping through symlinks', () => {
     const realTmp = path.join(root, 'real-tmp');
     const linkTmp = path.join(root, 'link-tmp');
     fs.mkdirSync(realTmp);
+    const canonicalTmp = fs.realpathSync(realTmp);
     fs.symlinkSync(realTmp, linkTmp, 'dir');
     process.env.TMPDIR = linkTmp;
 
@@ -89,14 +90,14 @@ suite('mio check path mapping through symlinks', () => {
     assert.equal(calls.length, 1);
     assert.ok(result.checkedPath.startsWith(linkTmp + path.sep));
     assert.equal(result.payloads.length, 1);
-    assert.ok(result.payloads[0]?.path?.startsWith(realTmp + path.sep));
+    assert.ok(result.payloads[0]?.path?.startsWith(canonicalTmp + path.sep));
     assert.equal(
       mapDiagnosticPath(result.payloads[0]?.path, result.pathMap, result.checkedPath),
       source,
     );
     // Sibling files are mapped under both spellings as well.
     assert.equal(
-      result.pathMap.get(path.join(realTmp, path.basename(path.dirname(result.checkedPath)), 'lib.mio')),
+      result.pathMap.get(path.join(canonicalTmp, path.basename(path.dirname(result.checkedPath)), 'lib.mio')),
       path.join(project, 'lib.mio'),
     );
     assert.equal(fs.existsSync(path.dirname(result.checkedPath)), false);
