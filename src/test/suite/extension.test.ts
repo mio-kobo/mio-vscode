@@ -270,9 +270,13 @@ suite('Mio extension host', () => {
     const document = await openDocument(sourcePath);
 
     try {
+      await waitFor('the diagnostic fixture to become active with CLI diagnostics', () =>
+        vscode.window.activeTextEditor?.document === document && api.getDiagnosticsOwner() === 'cli');
       await vscode.commands.executeCommand('mio.checkCurrentFile');
-      const diagnostics = vscode.languages.getDiagnostics(document.uri);
-      assert.ok(diagnostics.length > 0, 'expected at least one diagnostic');
+      const diagnostics = await waitFor('the CLI diagnostic to be published', () => {
+        const current = vscode.languages.getDiagnostics(document.uri);
+        return current.length > 0 ? current : undefined;
+      }, 5_000);
 
       const diagnostic = diagnostics.find(
         (item) => item.source === 'mio' && String(item.code) === 'E0201',

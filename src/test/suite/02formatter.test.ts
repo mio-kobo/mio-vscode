@@ -32,6 +32,13 @@ function nativeFormatterSuite(executable: string): void {
       await vscode.workspace.getConfiguration('editor', { languageId: 'mio' }).update('defaultFormatter', id, target, true);
     });
 
+    teardown(async () => {
+      await vscode.commands.executeCommand('notifications.clearAll');
+      if (vscode.window.activeTextEditor?.document === document) {
+        await editorCommand('workbench.action.revertAndCloseActiveEditor');
+      }
+    });
+
     suiteTeardown(async () => {
       if (!directory) { return; }
       await vscode.workspace.getConfiguration('editor', { languageId: 'mio' }).update('defaultFormatter', undefined, target, true);
