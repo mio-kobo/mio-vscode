@@ -57,7 +57,9 @@ Mio 是一门静态强类型编程语言，使用日语罗马音关键字，以 
   - `Mio: Open Output`
 - **MioCore 语言服务器**：通过 `vscode-languageclient` 启动 Mio CLI 的 `mio lsp`
   子命令。支持未保存缓冲区、文档版本校验、增量同步、请求取消，并把编译器
-  UTF-8 字节偏移映射为 VS Code UTF-16 位置。
+  UTF-8 字节偏移映射为 VS Code UTF-16 位置。`Mio: Restart Language Server`
+  可在不重新加载窗口的情况下重启它（例如安装 Mio 之后）。启动时找不到 CLI
+  会在每个会话中提示一次。
 - **CLI 回退诊断**：语言服务器被禁用、不可用或停止时，回退到
   `mio check --format=json`。任一时刻只有一套诊断生效。
 - **安全执行外部程序**：始终使用参数数组并关闭 shell；带空格、中文、日文的路径会
@@ -156,6 +158,7 @@ cSpell 为可选扩展；本扩展不会写入用户设置，已有的用户或�
 | `mio.buildCurrentFile` | Mio: Build Current File | 是 |
 | `mio.showCompilerVersion` | Mio: Show Compiler Version | 是 |
 | `mio.openOutput` | Mio: Open Output | 否 |
+| `mio.restartLanguageServer` | Mio: Restart Language Server | 是 |
 | `mioGraph.generateSource` | Mio Graph: Generate Mio Source | 否（校验需要） |
 
 运行和构建命令会先保存未保存的 `.mio` 缓冲区。手动 `Check Current File` 会像

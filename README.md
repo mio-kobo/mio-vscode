@@ -66,6 +66,9 @@ real editor screenshots.
   `vscode-languageclient`. It publishes compiler diagnostics for open buffers,
   including unsaved text, with document versioning, incremental edits,
   cancellation, and UTF-8 byte offset to VS Code UTF-16 position mapping.
+  `Mio: Restart Language Server` restarts it without reloading the window, for
+  example after installing Mio. If the CLI cannot be found at startup, a
+  notification is shown once per session.
 - **Semantic navigation** backed by the real Resolver and TypeChecker:
   - hover shows signatures, inferred types, declarations, and documentation;
   - go to definition works for variables, parameters, functions, struct fields,
@@ -195,6 +198,7 @@ launches VS Code.
 | `mio.buildCurrentFile` | Mio: Build Current File | Yes |
 | `mio.showCompilerVersion` | Mio: Show Compiler Version | Yes |
 | `mio.openOutput` | Mio: Open Output | No |
+| `mio.restartLanguageServer` | Mio: Restart Language Server | Yes |
 | `mioGraph.generateSource` | Mio Graph: Generate Mio Source | No (validation needs it) |
 
 Run and build save a dirty `.mio` buffer first. Manual `Check Current File`

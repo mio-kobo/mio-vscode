@@ -10,6 +10,22 @@
 
 ## Unreleased
 
+### Fixed (correctness and lifecycle)
+
+- CLI diagnostics are no longer attached to the current file when another file
+  with the same name reports them; canonical temporary paths (macOS
+  `/var` → `/private/var`) and symlinked workspaces still map correctly.
+- `Mio: Restart Language Server` recovers a failed or stopped server without a
+  settings change or window reload.
+- Deactivation waits for the language server to shut down.
+- Re-enabling diagnostics in CLI fallback re-checks open saved files instead of
+  leaving them empty until the next save.
+- A missing Mio CLI at startup is reported once per session, not only logged.
+- Test Explorer reloads every edited test file, not only the last one.
+- Timeouts and cancellation settle promptly when the CLI process left children
+  holding its output; on POSIX the whole process group is terminated.
+- Import completion no longer offers `bunko/…` paths, which the compiler rejects.
+
 ### Added (Test Explorer)
 
 - VS Code Test Explorer integration backed by `mio test --format=json`, with
