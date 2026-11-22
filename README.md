@@ -257,8 +257,7 @@ would require a real CLI flag.
 ## Current scope
 
 - Syntax highlighting, language configuration, snippets, folding, the MioCore
-  language server, the five CLI commands, and Mio Graph source generation
-  described above.
+  language server, CLI commands, Test Explorer, and Mio Graph source generation.
 - Diagnostics come from `mio lsp`. The server reuses Mio's Lexer, Parser,
   Resolver, and TypeChecker, analyzes unsaved buffers through an in-memory
   overlay, applies incremental edits, validates document versions, supports
@@ -272,11 +271,10 @@ would require a real CLI flag.
   Problems panel never shows both sources at once.
 - Hover, go-to-definition, find references, document symbols, completion, and
   signature help are provided by `mio lsp` (see the feature list above).
-  Workspace symbols, rename, semantic tokens, formatting, and code actions are
-  **not** implemented: the server does not advertise them and the extension
-  does not register regex-based fake providers. See
-  [docs/LSP_PLAN.md](docs/LSP_PLAN.md).
-- No debugger, formatter command, or Marketplace publication.
+- A compatible Mio CLI provides document formatting through `mio fmt` and
+  the Organize Imports action through `mio lsp`.
+- Debugging, workspace symbols, rename, and semantic tokens remain outside
+  the current scope. See [docs/LSP_PLAN.md](docs/LSP_PLAN.md).
 
 ## Known limitations
 

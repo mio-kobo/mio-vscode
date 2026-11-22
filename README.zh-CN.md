@@ -205,8 +205,8 @@ JetBrains 插件一样，将当前目录的 `.mio` 文件复制到临时包并�
 
 ## 当前支持范围
 
-- 语法高亮、Language Configuration、代码片段、折叠、MioCore 语言服务器、上述
-  五个 CLI 命令，以及 Mio Graph 源码生成。
+- 语法高亮、Language Configuration、代码片段、折叠、MioCore 语言服务器、
+  CLI 命令、测试资源管理器和 Mio Graph 源码生成。
 - 诊断来自 `mio lsp`。语言服务器复用 Lexer、Parser、Resolver、TypeChecker，通过
   内存 overlay 分析未保存缓冲区，支持增量编辑、文档版本校验和 `$/cancelRequest`。
 - 编译器流水线在第一个错误处停止，因此每次分析最多发布一条诊断；包/导入错误可能不带
@@ -214,9 +214,10 @@ JetBrains 插件一样，将当前目录的 `.mio` 文件复制到临时包并�
 - 语言服务器不可用时自动回退到 `mio check --format=json`，并清空另一套诊断，
   Problems 面板不会同时出现两份来源。
 - Hover、跳转定义、查找引用、文档符号、自动补全与签名提示已基于真实 AST、
-  Resolver 绑定和类型结果实现；重命名、语义 Token 与格式化仍未实现，也不会被
-  advertise。设计见 [docs/LSP_PLAN.md](docs/LSP_PLAN.md)。
-- 不包含调试器、测试浏览器、格式化器或 Marketplace 发布。
+  Resolver 绑定和类型结果实现。
+- 兼容版本的 Mio CLI 通过 `mio fmt` 提供文档格式化，通过 `mio lsp` 提供整理导入。
+- 调试、工作区符号、重命名和语义标记暂不在当前支持范围内。设计见
+  [docs/LSP_PLAN.md](docs/LSP_PLAN.md)。
 
 ## 已知限制
 
