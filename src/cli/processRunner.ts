@@ -12,6 +12,7 @@ export interface ProcessRunOptions {
   timeoutMs?: number;
   token?: CancellationLike | undefined;
   maxOutputBytes?: number;
+  input?: string;
 }
 
 export interface ProcessRunResult {
@@ -63,7 +64,7 @@ export class ProcessRunner {
           // POSIX: make the child a process-group leader so terminate() can
           // signal descendants too. The child is still awaited (not unref'd).
           detached: USE_PROCESS_GROUPS,
-          stdio: ['ignore', 'pipe', 'pipe'],
+          stdio: [options.input === undefined ? 'ignore' : 'pipe', 'pipe', 'pipe'],
         });
       } catch (error) {
         reject(this.startError(executable, error));
@@ -164,6 +165,7 @@ export class ProcessRunner {
           return;
         }
         settleTimer = setTimeout(() => {
+          child.stdin?.destroy();
           child.stdout?.destroy();
           child.stderr?.destroy();
           finish(child.exitCode, child.signalCode);
@@ -190,6 +192,23 @@ export class ProcessRunner {
       child.once('close', (code, signal) => {
         finish(code, signal);
       });
+
+      child.stdin?.on('error', (error: NodeJS.ErrnoException) => {
+        // A CLI rejecting arguments can close stdin before it reports stderr.
+        if (error.code === 'EPIPE' || error.code === 'ERR_STREAM_DESTROYED' || settled || this.terminated.has(child)) {
+          return;
+        }
+        settled = true;
+        cleanup();
+        this.terminate(child);
+        reject(new ProcessRunError(`Failed to write to Mio CLI stdin: ${error.message}`, error.code, error));
+      });
+      if (options.token?.isCancellationRequested) {
+        cancelled = true;
+        this.terminate(child);
+      } else {
+        child.stdin?.end(options.input);
+      }
     });
   }
 
@@ -203,6 +222,9 @@ export class ProcessRunner {
   // POSIX children run in their own process group (see spawn), so the whole
   // tree started by the CLI is signalled, not only the direct child.
   private terminate(child: ChildProcess): void {
+    if (this.terminated.has(child)) {
+      return;
+    }
     this.terminated.add(child);
     this.signal(child, 'SIGTERM');
     const force = setTimeout(() => {

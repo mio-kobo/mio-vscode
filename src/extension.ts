@@ -1,3 +1,4 @@
+import { MioFormatter } from './editor/formatter';
 import { MioCompletionProvider } from './editor/completionProvider';
 import { MioSemicolonProvider } from './editor/semicolonProvider';
 import * as vscode from 'vscode';
@@ -58,6 +59,7 @@ export async function activate(
   const runner = new ProcessRunner();
   const cli = new MioCliService();
   const diagnostics = new MioDiagnosticManager({ output, runner, cli });
+  const formatter = new MioFormatter(cli, runner, output);
   const commands = new MioCommands({ output, runner, cli, diagnostics });
   const graphCommands = new MioGraphCommands({ output, runner, cli });
   const languageClient = new MioLanguageClient({ output, cli });
@@ -95,7 +97,21 @@ export async function activate(
     };
   };
 
+  const activeMio = (): vscode.TextDocument | undefined => {
+    const document = vscode.window.activeTextEditor?.document;
+    return document?.languageId === 'mio' ? document : undefined;
+  };
+  const runEditorCommand = async (command: string): Promise<void> => {
+    if (activeMio()) { await vscode.commands.executeCommand(command); }
+  };
+
   const commandDisposables = [
+    vscode.commands.registerCommand('mio.formatDocument', guard(() => runEditorCommand('editor.action.formatDocument'))),
+    vscode.commands.registerCommand('mio.organizeImports', guard(() => runEditorCommand('editor.action.organizeImports'))),
+    vscode.commands.registerCommand('mio.checkFormatting', guard(async () => {
+      const document = activeMio();
+      if (document) { await formatter.check(document); }
+    })),
     vscode.commands.registerCommand(
       'mio.checkCurrentFile',
       guard(() => commands.checkCurrentFile()),
@@ -131,7 +147,8 @@ export async function activate(
   ];
 
   const completion = new MioCompletionProvider();
-  const editing = [completion, vscode.languages.registerCompletionItemProvider({ language: 'mio' }, completion, '"', '/'),
+  const editing = [vscode.languages.registerDocumentFormattingEditProvider({ language: 'mio' }, formatter),
+    completion, vscode.languages.registerCompletionItemProvider({ language: 'mio' }, completion, '"', '/'),
     vscode.languages.registerOnTypeFormattingEditProvider({ language: 'mio' }, new MioSemicolonProvider(), '\n')];
   const changeListener = vscode.workspace.onDidChangeTextDocument(event => { if (event.contentChanges.length) { diagnostics.onDidChange(event.document); } });
 

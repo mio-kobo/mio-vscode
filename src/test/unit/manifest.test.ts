@@ -30,6 +30,7 @@ interface PackageManifest {
     }>;
     snippets?: Array<{ language?: string; path?: string }>;
     commands?: Array<{ command?: string; title?: string }>;
+    keybindings?: Array<{ command: string; when: string; key: string; mac?: string }>;
     configuration?: {
       title?: string;
       properties?: Record<string, unknown>;
@@ -167,13 +168,14 @@ suite('extension manifest', () => {
   });
 
   test('contributes the Mio commands and the Mio Graph command', () => {
-    const commands = new Set(
-      (manifest.contributes?.commands ?? []).map((entry) => entry.command),
-    );
-    assert.deepEqual([...commands].sort(), [
+    const commands = (manifest.contributes?.commands ?? []).map((entry) => entry.command);
+    assert.deepEqual(commands.sort(), [
       'mio.buildCurrentFile',
       'mio.checkCurrentFile',
+      'mio.checkFormatting',
+      'mio.formatDocument',
       'mio.openOutput',
+      'mio.organizeImports',
       'mio.restartLanguageServer',
       'mio.runCurrentFile',
       'mio.showCompilerVersion',
@@ -193,6 +195,10 @@ suite('extension manifest', () => {
       'mio.editing.autoInsertSemicolon',
       'mio.editing.smartSnippets',
       'mio.executablePath',
+      'mio.format.enable',
+      'mio.format.executable',
+      'mio.format.organizeImports',
+      'mio.format.timeout',
       'mio.languageServer.enabled',
       'mio.outputDirectory',
     ]);
@@ -202,6 +208,15 @@ suite('extension manifest', () => {
       true,
     );
     assert.equal('mio.languageVersion' in properties, false);
+  });
+
+  test('scopes the organize-imports shortcut to Mio editors', () => {
+    assert.deepEqual(manifest.contributes?.keybindings, [{
+      command: 'mio.organizeImports',
+      key: 'shift+alt+o',
+      mac: 'shift+alt+o',
+      when: 'editorLangId == mio && editorTextFocus',
+    }]);
   });
 
   test('disables cSpell only for Mio through overridable configuration defaults', () => {

@@ -414,3 +414,33 @@ originating edit; extension changes cannot remove MioCore analysis/debounce late
 
 See [validation and measurements](docs/RELEASE-0.3.1.md) for reproducible tests,
 performance results, and implementation limits.
+
+### Formatting and imports
+
+Install a Mio CLI with `mio fmt` support. The extension uses the executable
+from `mio.format.executable`, `mio.executablePath`, or PATH. **Format Document**
+uses the current editor contents, including unsaved changes. Use the usual
+Shift+Option+F on macOS or Shift+Alt+F on Windows and Linux.
+
+With the Mio language server running, accepting an unambiguous package member
+completion can add its `yobu` declaration. Use **Mio: Organize Imports**
+(Shift+Option+O on macOS or Shift+Alt+O on Windows and Linux) to run the
+language server's source action. **Mio: Check Formatting** checks the current
+buffer and **Mio: Restart Language Server** restarts the service.
+
+To opt in to save-time edits, add these settings to your workspace:
+
+```json
+{
+  "[mio]": {
+    "editor.defaultFormatter": "exmikupro.mio-language-support",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"
+    }
+  }
+}
+```
+
+Set `mio.format.organizeImports` to `false` to make Format Document change
+only whitespace. The standalone Organize Imports action is still available.

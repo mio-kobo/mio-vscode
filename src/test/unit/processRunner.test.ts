@@ -45,6 +45,13 @@ suite('process runner', () => {
     assert.equal(result.stderr, '');
   });
 
+  test('sends the exact unsaved text and closes stdin', async () => {
+    const input = 'waza main()->unit { chant("Mio 日本語"); }\r\n';
+    const result = await runner.run(process.execPath, ['-e', 'process.stdin.pipe(process.stdout)'], { input });
+    assert.equal(result.code, 0);
+    assert.equal(result.stdout, input);
+  });
+
   test('captures stderr and non-zero exit codes', async () => {
     const result = await runner.run(
       process.execPath,
