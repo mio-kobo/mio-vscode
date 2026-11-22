@@ -3,6 +3,9 @@ import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
+import { MioCliService } from '../../cli/cliService';
+import { ProcessRunner } from '../../cli/processRunner';
+import { MioFormatter } from '../../editor/formatter';
 import type { MioExtensionApi } from '../../extension';
 
 const id = 'exmikupro.mio-language-support';
@@ -112,6 +115,44 @@ function nativeFormatterSuite(executable: string): void {
       assert.equal(edits?.length ?? 0, 0);
       assert.equal(document.getText(), invalid);
     });
+
+    if (process.platform !== 'win32') {
+      test('formatter timeout and cancellation terminate a real child process', async () => {
+        const slow = path.join(directory, 'Mio slow');
+        await fs.writeFile(slow, '#!/bin/sh\nif [ "$1" = version ]; then printf "mio v9.0\\n"; else exec /bin/sleep 60; fi\n', { mode: 0o755 });
+        const cli = new MioCliService();
+        const runner = new ProcessRunner();
+        const channel = vscode.window.createOutputChannel('Mio formatter test');
+        const formatter = new MioFormatter(cli, runner, channel);
+        const token = new vscode.CancellationTokenSource();
+        const options = { tabSize: 4, insertSpaces: true };
+        try {
+          await settings.update('format.executable', slow, target);
+          await settings.update('format.timeout', 250, target);
+          await open('deadline', source);
+          const start = Date.now();
+          assert.deepEqual(await formatter.provideDocumentFormattingEdits(document, options, token.token), []);
+          assert.ok(Date.now() - start < 4_000);
+          await settings.update('format.timeout', 10_000, target);
+          const cancel = setTimeout(() => token.cancel(), 100);
+          try {
+            const started = Date.now();
+            assert.deepEqual(await formatter.provideDocumentFormattingEdits(document, options, token.token), []);
+            assert.ok(Date.now() - started < 4_000);
+            assert.equal(document.getText(), source);
+          } finally {
+            clearTimeout(cancel);
+          }
+        } finally {
+          token.dispose();
+          runner.dispose();
+          cli.dispose();
+          channel.dispose();
+          await settings.update('format.executable', undefined, target);
+          await settings.update('format.timeout', undefined, target);
+        }
+      });
+    }
 
     test('Organize Imports command uses the standard source action', async () => {
       await ensureLanguageServer();
